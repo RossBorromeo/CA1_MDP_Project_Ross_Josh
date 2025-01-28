@@ -23,4 +23,3 @@ enum class TextureID
 	kParticle
 
 };
-

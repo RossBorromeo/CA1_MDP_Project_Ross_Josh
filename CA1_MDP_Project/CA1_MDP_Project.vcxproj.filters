@@ -221,7 +221,7 @@
     <ClInclude Include="EmitterNode.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Entitty.hpp">
+    <ClInclude Include="Entity.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Game.hpp">
@@ -297,6 +297,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="World.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PickupType.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
