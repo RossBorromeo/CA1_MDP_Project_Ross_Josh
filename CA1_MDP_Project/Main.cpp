@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include "Game.hpp"
 #include "ResourceIdentifiers.hpp"
 #include <iostream>
 #include "Application.hpp"
