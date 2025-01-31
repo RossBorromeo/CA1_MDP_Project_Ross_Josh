@@ -1,33 +1,37 @@
 #pragma once
-#include <SFML/Window/Event.hpp>
-#include "Action.hpp"
-#include "CommandQueue.hpp"
-#include "MissionStatus.hpp"
+#include "Command.hpp"
+#include "ReceiverCategories.hpp"
 #include <map>
+#include <SFML/Window/Keyboard.hpp>
 
-class Command;
-
+class CommandQueue;
 
 class Player
 {
 public:
-	Player();
-	void HandleEvent(const sf::Event& event, CommandQueue& command_queue);
-	void HandleRealTimeInput(CommandQueue& command_queue);
+	enum class Action
+	{
+		MoveLeft,
+		MoveRight,
+		MoveUp,
+		MoveDown,
+		Fire,
+		LaunchMissile,
+		ActionCount
+	};
 
+	explicit Player(int playerID);
+	void HandleRealtimeInput(CommandQueue& commands);
+	void HandleEvent(const sf::Event& event, CommandQueue& commands);
 	void AssignKey(Action action, sf::Keyboard::Key key);
 	sf::Keyboard::Key GetAssignedKey(Action action) const;
-	void SetMissionStatus(MissionStatus status);
-	MissionStatus GetMissionStatus() const;
 
 private:
-	void InitialiseActions();
-	static bool IsRealTimeAction(Action action);
+	void InitializeKeyBindings();
+	void InitializeActions();
 
 private:
 	std::map<sf::Keyboard::Key, Action> m_key_binding;
 	std::map<Action, Command> m_action_binding;
-	MissionStatus m_current_mission_status;
-
+	int m_playerID;
 };
-

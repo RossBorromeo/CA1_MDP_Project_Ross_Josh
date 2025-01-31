@@ -1,60 +1,47 @@
 #pragma once
+#include <vector>
 #include <memory>
-#include <SFML/System/NonCopyable.hpp>
-#include <SFML/Graphics.hpp>
-#include "ReceiverCategories.hpp"
-#include "CommandQueue.hpp"
-#include "Command.hpp"
+#include <SFML/System/Time.hpp>
+#include <SFML/Graphics/Transformable.hpp>
+#include <SFML/Graphics/Drawable.hpp>
+#include <SFML/Graphics/Rect.hpp>
 
-#include <set>
+class Command;
+class CommandQueue;
 
-
-
-class SceneNode : public sf::Transformable, public sf::Drawable, private sf::NonCopyable
+class SceneNode : public sf::Transformable, public sf::Drawable
 {
 public:
-	typedef std::unique_ptr<SceneNode> Ptr;
-	typedef std::pair<SceneNode*, SceneNode*> Pair;
+	using Ptr = std::unique_ptr<SceneNode>;
 
-public:
-	SceneNode(ReceiverCategories cateogry = ReceiverCategories::kNone);
+	SceneNode();
+	virtual ~SceneNode() = default;
+
 	void AttachChild(Ptr child);
 	Ptr DetachChild(const SceneNode& node);
 
 	void Update(sf::Time dt, CommandQueue& commands);
+	virtual void MarkForRemoval();
+	bool IsMarkedForRemoval() const;
 
-	sf::Vector2f GetWorldPosition() const;
+	virtual unsigned int GetCategory() const;
+	virtual sf::FloatRect GetBoundingRect() const;
+
 	sf::Transform GetWorldTransform() const;
+	sf::Vector2f GetWorldPosition() const;
+	SceneNode* GetParent() const;
+	SceneNode* GetChildren() const;
 
 	void OnCommand(const Command& command, sf::Time dt);
-
-	virtual sf::FloatRect GetBoundingRect() const;
-	void DrawBoundingRect(sf::RenderTarget& target, sf::RenderStates states, sf::FloatRect& rect) const;
-
-	void CheckSceneCollision(SceneNode& scene_graph, std::set<Pair>& collison_pairs);
 	void RemoveWrecks();
-	virtual unsigned int GetCategory() const;
 
-private:
+protected:
 	virtual void UpdateCurrent(sf::Time dt, CommandQueue& commands);
-	void UpdateChildren(sf::Time dt, CommandQueue& commands);
-
-	//Note draw() is from sf::Drawable and hence the name
-	//Do not be tempted to call this method Draw()
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
-	virtual void DrawCurrent(sf::RenderTarget& target, sf::RenderStates states) const;
-	void DrawChildren(sf::RenderTarget& target, sf::RenderStates states) const;
-
-
-	void CheckNodeCollision(SceneNode& node, std::set<Pair>& collison_pairs);
-	virtual bool IsDestroyed() const;
-	virtual bool IsMarkedForRemoval() const;
+	virtual void drawCurrent(sf::RenderTarget& target, sf::RenderStates states) const;
 
 private:
+	bool m_is_marked_for_removal;
 	std::vector<Ptr> m_children;
 	SceneNode* m_parent;
-	ReceiverCategories m_default_category;
 };
-float Distance(const SceneNode& lhs, const SceneNode& rhs);
-bool Collision(const SceneNode& lhs, const SceneNode& rhs);
-

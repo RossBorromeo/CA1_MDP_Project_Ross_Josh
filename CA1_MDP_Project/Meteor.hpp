@@ -1,24 +1,24 @@
 #pragma once
 #include "Entity.hpp"
-#include "ProjectileType.hpp"
+#include "MeteorType.hpp"
 #include "ResourceIdentifiers.hpp"
-#include <SFML/Graphics/Sprite.hpp>
 
-class Projectile : public Entity
+class Meteor : public Entity
 {
 public:
-	explicit Projectile(ProjectileType type, const TextureHolder& textures);
-	void GuideTowards(sf::Vector2f position);
+	Meteor(MeteorType type, const TextureHolder& textures);
 	unsigned int GetCategory() const override;
 	sf::FloatRect GetBoundingRect() const override;
-	float GetDamage() const;
+	void MarkForRemoval() override;
+	bool IsPowerUp() const;
 
 protected:
 	void UpdateCurrent(sf::Time dt, CommandQueue& commands) override;
 	void drawCurrent(sf::RenderTarget& target, sf::RenderStates states) const override;
 
 private:
-	ProjectileType m_type;
+	MeteorType m_type;
 	sf::Sprite m_sprite;
-	sf::Vector2f m_target_direction;
+	TextureHolder m_textures;
 };
+

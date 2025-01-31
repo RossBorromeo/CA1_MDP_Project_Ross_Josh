@@ -4,5 +4,6 @@ enum class SceneLayers
 	kBackground,
 	kLowerAir,
 	kUpperAir,
-	kLayerCount
+	kLayerCount,
+	kAir,
 };

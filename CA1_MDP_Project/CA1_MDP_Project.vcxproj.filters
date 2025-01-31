@@ -134,7 +134,7 @@
     <ClInclude Include="TextureID.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Font.hpp">
+    <ClInclude Include="FontID.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ShaderTypes.hpp">

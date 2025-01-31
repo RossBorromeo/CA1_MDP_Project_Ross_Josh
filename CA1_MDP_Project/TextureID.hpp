@@ -1,4 +1,5 @@
 #pragma once
+
 enum class TextureID
 {
 	kLandscape,
@@ -20,6 +21,7 @@ enum class TextureID
 	kJungle,
 	kButtons,
 	kExplosion,
-	kParticle
-
+	kParticle,
+	kMeteor, // New: Texture for normal meteors
+	kPowerupMeteor // New: Texture for power-up meteors
 };

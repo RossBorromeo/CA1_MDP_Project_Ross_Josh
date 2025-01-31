@@ -1,5 +1,5 @@
 #pragma once
-enum class Font
+enum class FontID
 {
 	kMain
 };

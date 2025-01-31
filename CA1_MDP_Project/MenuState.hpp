@@ -1,22 +1,25 @@
 #pragma once
 #include "State.hpp"
-#include "MenuOptions.hpp"
-#include "Container.hpp"
-#include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Graphics/Text.hpp>
 #include <vector>
-
+#include <SFML/Graphics/Text.hpp>
+#include <SFML/Graphics/Sprite.hpp>
 
 class MenuState : public State
 {
 public:
 	MenuState(StateStack& stack, Context context);
-	virtual void Draw() override;
-	virtual bool Update(sf::Time dt) override;
-	virtual bool HandleEvent(const sf::Event& event) override;
+
+	void Draw() override;
+	bool Update(sf::Time dt) override;
+	bool HandleEvent(const sf::Event& event) override;
 
 private:
-	sf::Sprite m_background_sprite;
-	gui::Container m_gui_container;
-};
+	void UpdateOptionText();
 
+private:
+	enum OptionNames { Play, Exit };
+
+	sf::Sprite m_background_sprite;
+	std::vector<sf::Text> m_options;
+	std::size_t m_selected_option;
+};
