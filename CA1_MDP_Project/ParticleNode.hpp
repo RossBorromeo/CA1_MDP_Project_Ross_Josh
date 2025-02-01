@@ -2,30 +2,31 @@
 #include "SceneNode.hpp"
 #include "ParticleType.hpp"
 #include "ResourceIdentifiers.hpp"
-#include "Particle.hpp"
+#include <SFML/Graphics/VertexArray.hpp>
+#include <deque>
+
+struct Particle
+{
+	sf::Vector2f position;
+	sf::Color color;
+	float lifetime;
+};
 
 class ParticleNode : public SceneNode
 {
 public:
-	ParticleNode(ParticleType type, const TextureHolder& textures);
-
+	explicit ParticleNode(ParticleType type, const TextureHolder& textures);
 	void AddParticle(sf::Vector2f position);
 	ParticleType GetParticleType() const;
-	virtual unsigned int GetCategory() const;
 
 private:
-	virtual void UpdateCurrent(sf::Time dt, CommandQueue& commands);
-	virtual void DrawCurrent(sf::RenderTarget& target, sf::RenderStates states) const;
-	void AddVertex(float worldX, float worldY, float texCoordX, float textCoordY, const sf::Color& color) const;
-	void ComputeVertices() const;
+	void UpdateCurrent(sf::Time dt, CommandQueue& commands) override;
+	void drawCurrent(sf::RenderTarget& target, sf::RenderStates states) const override;
+	void RemoveExpiredParticles();
 
 private:
 	std::deque<Particle> m_particles;
-	const sf::Texture& m_texture;
+	sf::VertexArray m_vertex_array;
 	ParticleType m_type;
-
-	mutable sf::VertexArray m_vertex_array;
-	mutable bool m_needs_vertex_update;
-
+	const sf::Texture& m_texture;
 };
-

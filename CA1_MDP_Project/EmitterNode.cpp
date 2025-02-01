@@ -1,4 +1,7 @@
 #include "EmitterNode.hpp"
+#include "Command.hpp"
+#include "ReceiverCategories.hpp"
+#include "CommandQueue.hpp"
 
 EmitterNode::EmitterNode(ParticleType type)
 	:SceneNode()

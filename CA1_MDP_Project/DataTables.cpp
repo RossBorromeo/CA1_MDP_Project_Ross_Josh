@@ -71,17 +71,17 @@ std::vector<ProjectileData> InitializeProjectileData()
 std::vector<PickupData> InitializePickupData()
 {
     std::vector<PickupData> data(static_cast<int>(PickupType::kPickupCount));
-    data[static_cast<int>(PickupType::kHealthRefill)].m_texture = TextureID::kEntities;
-    data[static_cast<int>(PickupType::kHealthRefill)].m_texture_rect = sf::IntRect(0, 64, 40, 40);
-    data[static_cast<int>(PickupType::kHealthRefill)].m_action = [](Aircraft& a)
+    data[static_cast<int>(PickupType::kHealth)].m_texture = TextureID::kEntities;
+    data[static_cast<int>(PickupType::kHealth)].m_texture_rect = sf::IntRect(0, 64, 40, 40);
+    data[static_cast<int>(PickupType::kHealth)].m_action = [](Aircraft& a)
         {
             a.Repair(25);
         };
 
-    data[static_cast<int>(PickupType::kMissileRefill)].m_texture = TextureID::kEntities;
-    data[static_cast<int>(PickupType::kMissileRefill)].m_texture_rect = sf::IntRect(40, 64, 40, 40);
+    data[static_cast<int>(PickupType::kMissile)].m_texture = TextureID::kEntities;
+    data[static_cast<int>(PickupType::kMissile)].m_texture_rect = sf::IntRect(40, 64, 40, 40);
 
-    data[static_cast<int>(PickupType::kMissileRefill)].m_action = std::bind(&Aircraft::CollectMissile, std::placeholders::_1, 3);
+    data[static_cast<int>(PickupType::kMissile)].m_action = std::bind(&Aircraft::CollectMissiles, std::placeholders::_1, 3);
 
     data[static_cast<int>(PickupType::kFireSpread)].m_texture = TextureID::kEntities;
     data[static_cast<int>(PickupType::kFireSpread)].m_texture_rect = sf::IntRect(80, 64, 40, 40);

@@ -2,15 +2,18 @@
 #include "Entity.hpp"
 #include "MeteorType.hpp"
 #include "ResourceIdentifiers.hpp"
+#include <SFML/Graphics/Sprite.hpp>
 
 class Meteor : public Entity
 {
 public:
-	Meteor(MeteorType type, const TextureHolder& textures);
+	explicit Meteor(MeteorType type, const TextureHolder& textures);
+	void TakeDamage(int damage);
+	bool IsPowerUp() const;
+
 	unsigned int GetCategory() const override;
 	sf::FloatRect GetBoundingRect() const override;
 	void MarkForRemoval() override;
-	bool IsPowerUp() const;
 
 protected:
 	void UpdateCurrent(sf::Time dt, CommandQueue& commands) override;
@@ -19,6 +22,6 @@ protected:
 private:
 	MeteorType m_type;
 	sf::Sprite m_sprite;
-	TextureHolder m_textures;
+	const TextureHolder& m_textures;
+	int m_hitpoints;
 };
-

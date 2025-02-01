@@ -15,5 +15,7 @@ namespace ReceiverCategories
 		kPlayer2 = 1 << 7,  // New category for Player 2
 		kPlayerProjectile,
 		kEnemyProjectile,
+		kParticleSystem = 1 << 8,
+		kSoundEffect = 1 << 9,
 	};
 }

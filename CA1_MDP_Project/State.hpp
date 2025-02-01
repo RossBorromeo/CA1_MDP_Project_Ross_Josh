@@ -1,53 +1,45 @@
 #pragma once
-#include "ResourceIdentifiers.hpp"
-#include "StateID.hpp"
 #include <SFML/System/Time.hpp>
 #include <SFML/Window/Event.hpp>
+#include <SFML/Graphics/RenderWindow.hpp>
 #include <memory>
-#include "MusicPlayer.hpp"
-#include "SoundPlayer.hpp"
 
-namespace sf
-{
-	class RenderWindow;
-}
-
-class Player;
 class StateStack;
+class Player;
+class FontHolder;
+class SoundPlayer;
+class TextureHolder;
+class sf::RenderWindow;
 
 class State
 {
 public:
-	typedef std::unique_ptr<State> Ptr;
-
 	struct Context
 	{
-		Context(sf::RenderWindow& window, TextureHolder& textures, FontHolder& fonts, Player& player, MusicPlayer& music, SoundPlayer& sounds);
+		Context(sf::RenderWindow& window, FontHolder& fonts, SoundPlayer& sounds, TextureHolder& textures, Player& player);
+
 		sf::RenderWindow* window;
-		TextureHolder* textures;
 		FontHolder* fonts;
-		Player* player;
-		MusicPlayer* music;
 		SoundPlayer* sounds;
+		TextureHolder* textures;
+		Player* player;
 	};
 
 public:
-	State(StateStack& stack, Context context);
-	virtual ~State();
+	explicit State(StateStack& stack, Context context);
+	virtual ~State() = default;
+
 	virtual void Draw() = 0;
 	virtual bool Update(sf::Time dt) = 0;
 	virtual bool HandleEvent(const sf::Event& event) = 0;
-
+	Context GetContext() const;
 
 protected:
-	void RequestStackPush(StateID state_id);
+	void RequestStackPush(StateID stateID);
 	void RequestStackPop();
 	void RequestStackClear();
 
-	Context GetContext() const;
-
-private:
+protected:
 	StateStack* m_stack;
 	Context m_context;
 };
-

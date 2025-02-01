@@ -1,11 +1,10 @@
 #pragma once
-#include <SFML/Graphics/RenderWindow.hpp>
-#include "Player.hpp"
-#include "ResourceHolder.hpp"
-#include "ResourceIdentifiers.hpp"
 #include "StateStack.hpp"
-#include "MusicPlayer.hpp"
+#include "Player.hpp"
+#include "TextureHolder.hpp"
+#include "FontID.hpp"
 #include "SoundPlayer.hpp"
+#include <SFML/Graphics/RenderWindow.hpp>
 
 class Application
 {
@@ -15,21 +14,29 @@ public:
 
 private:
 	void ProcessInput();
-	void Update(sf::Time dt);
+	void Update(sf::Time delta_time);
 	void Render();
-	void RegisterStates();
 
 private:
-	sf::RenderWindow m_window;
-	Player m_player;
-
-	TextureHolder m_textures;
-	FontHolder m_fonts;
-
-	StateStack m_stack;
 	static const sf::Time kTimePerFrame;
 
-	MusicPlayer m_music;
-	SoundPlayer m_sound;
-};
+	sf::RenderWindow m_window;
+	TextureHolder m_textures;
+	FontHolder m_fonts;
+	SoundPlayer m_sounds;
+	Player m_player;
+	StateStack m_state_stack;
 
+	struct Context
+	{
+		Context(sf::RenderWindow& window, FontHolder& fonts, SoundPlayer& sounds, TextureHolder& textures, Player& player)
+			: window(&window), fonts(&fonts), sounds(&sounds), textures(&textures), player(&player) {
+		}
+
+		sf::RenderWindow* window;
+		FontHolder* fonts;
+		SoundPlayer* sounds;
+		TextureHolder* textures;
+		Player* player;
+	};
+};

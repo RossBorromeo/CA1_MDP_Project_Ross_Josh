@@ -5,6 +5,7 @@
 #include "Pickup.hpp"
 #include "CommandQueue.hpp"
 #include "SceneNode.hpp"
+#include <SFML/Graphics/RenderTarget.hpp>
 
 Meteor::Meteor(MeteorType type, const TextureHolder& textures)
 	: Entity(1), m_type(type), m_sprite(textures.Get(type == MeteorType::kPowerUp ? TextureID::kPowerupMeteor : TextureID::kMeteor)), m_textures(textures)
@@ -12,6 +13,8 @@ Meteor::Meteor(MeteorType type, const TextureHolder& textures)
 	Utility::CentreOrigin(m_sprite);
 	SetVelocity(-100.f, 0.f); // Move leftward to match horizontal scrolling
 }
+
+
 
 unsigned int Meteor::GetCategory() const
 {
@@ -50,4 +53,13 @@ void Meteor::MarkForRemoval()
 void Meteor::drawCurrent(sf::RenderTarget& target, sf::RenderStates states) const
 {
 	target.draw(m_sprite, states);
+}
+
+void Meteor::TakeDamage(int damage)
+{
+	m_hitpoints -= damage;
+	if (m_hitpoints <= 0)
+	{
+		MarkForRemoval();
+	}
 }

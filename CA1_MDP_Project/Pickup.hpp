@@ -2,6 +2,7 @@
 #include "Entity.hpp"
 #include "PickupType.hpp"
 #include "ResourceIdentifiers.hpp"
+#include <SFML/Graphics/Sprite.hpp>
 
 class Aircraft;
 

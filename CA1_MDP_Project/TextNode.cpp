@@ -1,20 +1,23 @@
 #include "TextNode.hpp"
-#include "ResourceHolder.hpp"
 #include "Utility.hpp"
+#include "ResourceHolder.hpp"
+#include <SFML/Graphics/RenderTarget.hpp>
 
-TextNode::TextNode(const FontHolder& fonts, std::string& text)
-	:m_text(text, fonts.Get(Font::kMain), 20)
+TextNode::TextNode(const FontHolder& fonts, const std::string& text)
 {
+	const sf::Font& font = fonts.Get(FontID::kMain);
+	m_text.setFont(font);
+	m_text.setCharacterSize(20);
+	SetText(text);
 }
 
-void TextNode::SetString(const std::string& text)
+void TextNode::SetText(const std::string& text)
 {
-
 	m_text.setString(text);
 	Utility::CentreOrigin(m_text);
 }
 
-void TextNode::DrawCurrent(sf::RenderTarget& target, sf::RenderStates states) const
+void TextNode::drawCurrent(sf::RenderTarget& target, sf::RenderStates states) const
 {
 	target.draw(m_text, states);
 }

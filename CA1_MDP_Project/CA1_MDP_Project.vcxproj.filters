@@ -126,6 +126,9 @@
     <ClCompile Include="Pickup.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Meteor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ResourceIdentifiers.hpp">
@@ -300,6 +303,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PickupType.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Meteor.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MeteorType.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

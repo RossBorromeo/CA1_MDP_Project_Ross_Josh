@@ -9,6 +9,7 @@ class Aircraft : public Entity
 {
 public:
 	explicit Aircraft(AircraftType type, const TextureHolder& textures);
+	void TakeDamage(int damage);
 	void Accelerate(float vx, float vy);
 	void Repair(int amount);
 	void CollectMissiles(int amount);
@@ -29,4 +30,5 @@ private:
 	int m_hitpoints;
 	float m_fire_rate_level;
 	float m_fire_spread_level;
+	
 };

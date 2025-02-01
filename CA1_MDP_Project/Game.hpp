@@ -2,7 +2,7 @@
 #include "World.hpp"
 #include "Player.hpp"
 #include "TextureHolder.hpp"
-#include "Font.hpp"
+#include "FontID.hpp"
 #include "SoundPlayer.hpp"
 #include <SFML/Graphics/RenderWindow.hpp>
 

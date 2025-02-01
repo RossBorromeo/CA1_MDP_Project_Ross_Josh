@@ -3,6 +3,7 @@
 #include "ReceiverCategories.hpp"
 #include <map>
 #include <SFML/Window/Keyboard.hpp>
+#include <SFML/Window/Event.hpp>
 
 class CommandQueue;
 

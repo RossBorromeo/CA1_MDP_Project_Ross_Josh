@@ -1,93 +1,87 @@
 #include "SettingsState.hpp"
-#include "ResourceHolder.hpp"
 #include "Utility.hpp"
+#include "ResourceHolder.hpp"
+#include "Constants.hpp"
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Window/Event.hpp>
 
 SettingsState::SettingsState(StateStack& stack, Context context)
 	: State(stack, context)
-	, m_gui_container()
+	, m_selected_option(0)
 {
-	m_background_sprite.setTexture(context.textures->Get(TextureID::kTitleScreen));
+	sf::Font& font = context.fonts->Get(FontID::kMain);
+	sf::Vector2f window_size(context.window->getSize());
 
-	//Build key binding buttons and labels
-	AddButtonLabel(Action::kMoveUp, 150.f, "Move Up", context);
-	AddButtonLabel(Action::kMoveDown, 200.f, "Move Down", context);
-	AddButtonLabel(Action::kMoveRight, 250.f, "Move Right", context);
-	AddButtonLabel(Action::kMoveLeft, 300.f, "Move Left", context);
-	AddButtonLabel(Action::kBulletFire, 350.f, "Fire", context);
-	AddButtonLabel(Action::kMissileFire, 400.f, "Missile Fire", context);
+	m_options.emplace_back("Move Left", font, 24);
+	m_options.emplace_back("Move Right", font, 24);
+	m_options.emplace_back("Move Up", font, 24);
+	m_options.emplace_back("Move Down", font, 24);
+	m_options.emplace_back("Fire", font, 24);
+	m_options.emplace_back("Launch Missile", font, 24);
 
-	UpdateLabels();
-
-	auto back_button = std::make_shared<gui::Button>(context);
-	back_button->setPosition(80.f, 475.f);
-	back_button->SetText("Back");
-	back_button->SetCallback(std::bind(&SettingsState::RequestStackPop, this));
-	m_gui_container.Pack(back_button);
+	for (std::size_t i = 0; i < m_options.size(); ++i)
+	{
+		sf::Text& text = m_options[i];
+		text.setPosition(0.5f * window_size.x, 0.4f * window_size.y + i * 30.f);
+		Utility::CentreOrigin(text);
+	}
+	UpdateOptionText();
 }
 
 void SettingsState::Draw()
 {
-	sf::RenderWindow& window = *GetContext().window;
-	window.draw(m_background_sprite);
-	window.draw(m_gui_container);
+	Context context = GetContext();
+	for (const sf::Text& text : m_options)
+	{
+		context.window->draw(text);
+	}
 }
 
 bool SettingsState::Update(sf::Time dt)
 {
-	return true;
+	return false;
 }
 
 bool SettingsState::HandleEvent(const sf::Event& event)
 {
-	bool is_key_binding = false;
+	Context context = GetContext();
+	Player& player = *context.player;
 
-	//Iterate through all of the key binding buttons to see if they are being presssed, waiting for the user to enter a key
-	for (std::size_t action = 0; action < static_cast<int>(Action::kActionCount); ++action)
+	if (event.type == sf::Event::KeyPressed)
 	{
-		if (m_binding_buttons[action]->IsActive())
+		if (event.key.code == sf::Keyboard::Up)
 		{
-			is_key_binding = true;
-			if (event.type == sf::Event::KeyReleased)
-			{
-				GetContext().player->AssignKey(static_cast<Action>(action), event.key.code);
-				m_binding_buttons[action]->Deactivate();
-			}
-			break;
+			if (m_selected_option > 0)
+				--m_selected_option;
+			else
+				m_selected_option = m_options.size() - 1;
+			UpdateOptionText();
+		}
+		else if (event.key.code == sf::Keyboard::Down)
+		{
+			m_selected_option = (m_selected_option + 1) % m_options.size();
+			UpdateOptionText();
+		}
+		else if (event.key.code == sf::Keyboard::Return)
+		{
+			// Convert selected option to Player::Action
+			Player::Action action = static_cast<Player::Action>(m_selected_option);
+			context.window->setKeyRepeatEnabled(false);
 		}
 	}
-
-	//If pressed button changed key bindings, then update the labels
-	if (is_key_binding)
+	else if (event.type == sf::Event::KeyReleased)
 	{
-		UpdateLabels();
-	}
-	else
-	{
-		m_gui_container.HandleEvent(event);
+		// Assign new key to selected action
+		Player::Action action = static_cast<Player::Action>(m_selected_option);
+		player.AssignKey(action, event.key.code);
+		context.window->setKeyRepeatEnabled(true);
 	}
 	return false;
 }
 
-void SettingsState::UpdateLabels()
+void SettingsState::UpdateOptionText()
 {
-	Player& player = *GetContext().player;
-	for (std::size_t i = 0; i < static_cast<int>(Action::kActionCount); ++i)
-	{
-		sf::Keyboard::Key key = player.GetAssignedKey(static_cast<Action>(i));
-		m_binding_labels[i]->SetText(Utility::toString(key));
-	}
-}
-
-void SettingsState::AddButtonLabel(Action action, float y, const std::string& text, Context context)
-{
-	m_binding_buttons[static_cast<int>(action)] = std::make_shared<gui::Button>(context);
-	m_binding_buttons[static_cast<int>(action)]->setPosition(80.f, y);
-	m_binding_buttons[static_cast<int>(action)]->SetText(text);
-	m_binding_buttons[static_cast<int>(action)]->SetToggle(true);
-
-	m_binding_labels[static_cast<int>(action)] = std::make_shared<gui::Label>("", *context.fonts);
-	m_binding_labels[static_cast<int>(action)]->setPosition(300.f, y + 15.f);
-
-	m_gui_container.Pack(m_binding_buttons[static_cast<int>(action)]);
-	m_gui_container.Pack(m_binding_labels[static_cast<int>(action)]);
+	for (sf::Text& text : m_options)
+		text.setFillColor(sf::Color::White);
+	m_options[m_selected_option].setFillColor(sf::Color::Red);
 }

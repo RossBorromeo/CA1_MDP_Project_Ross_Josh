@@ -5,7 +5,7 @@
 
 gui::Button::Button(State::Context context)
     : m_sprite(context.textures->Get(TextureID::kButtons))
-    , m_text("", context.fonts->Get(Font::kMain), 16)
+    , m_text("", context.fonts->Get(FontID::kMain), 16)
     , m_is_toggle(false)
     , m_sounds(*context.sounds)
 {

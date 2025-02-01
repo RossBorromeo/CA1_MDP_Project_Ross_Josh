@@ -1,5 +1,4 @@
 #include "SoundNode.hpp"
-
 #include "SoundPlayer.hpp"
 #include "ReceiverCategories.hpp"
 
