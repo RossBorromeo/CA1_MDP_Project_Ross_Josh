@@ -1,7 +1,7 @@
 #include "MusicPlayer.hpp"
 
 MusicPlayer::MusicPlayer()
-	: m_volume(25.f)
+	: m_volume(10.f)
 {
 	m_filenames[MusicThemes::kMenuTheme] = "Media/Music/SLOWER-TEMPO2019-12-11_-_Retro_Platforming_-_David_Fesliyan.mp3";
 	m_filenames[MusicThemes::kMissionTheme] = "Media/Music/MissionTheme.ogg";
