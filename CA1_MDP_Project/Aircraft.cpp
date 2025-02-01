@@ -17,8 +17,8 @@ TextureID ToTextureID(AircraftType type)
 {
 	switch (type)
 	{
-	case AircraftType::kEagle:
-		return TextureID::kEagle;
+	case AircraftType::kBattleShip:
+		return TextureID::kBattleShip;
 		break;
 	case AircraftType::kRaptor:
 		return TextureID::kRaptor;
@@ -27,7 +27,7 @@ TextureID ToTextureID(AircraftType type)
 		return TextureID::kAvenger;
 		break;
 	}
-	return TextureID::kEagle;
+	return TextureID::kBattleShip;
 }
 
 Aircraft::Aircraft(AircraftType type, const TextureHolder& textures, const FontHolder& fonts)
@@ -304,7 +304,7 @@ void Aircraft::CheckProjectileLaunch(sf::Time dt, CommandQueue& commands)
 
 bool Aircraft::IsAllied() const
 {
-	return m_type == AircraftType::kEagle;
+	return m_type == AircraftType::kBattleShip;
 }
 
 void Aircraft::CreatePickup(SceneNode& node, const TextureHolder& textures) const

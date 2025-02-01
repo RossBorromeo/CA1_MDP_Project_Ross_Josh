@@ -84,7 +84,7 @@ bool World::HasPlayerReachedEnd() const
 
 void World::LoadTextures()
 {
-	m_textures.Load(TextureID::kEagle, "Media/Textures/BattleShip.png");
+	m_textures.Load(TextureID::kBattleShip, "Media/Textures/BattleShip.png");
 	m_textures.Load(TextureID::kRaptor, "Media/Textures/Raptor.png");
 	m_textures.Load(TextureID::kAvenger, "Media/Textures/Avenger.png");
 	m_textures.Load(TextureID::kLandscape, "Media/Textures/Desert.png");
@@ -133,7 +133,7 @@ void World::BuildScene()
 	m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->AttachChild(std::move(finish_sprite));
 
 	//Add the player's aircraft
-	std::unique_ptr<Aircraft> leader(new Aircraft(AircraftType::kEagle, m_textures, m_fonts));
+	std::unique_ptr<Aircraft> leader(new Aircraft(AircraftType::kBattleShip, m_textures, m_fonts));
 	m_player_aircraft = leader.get();
 	m_player_aircraft->setPosition(m_spawn_position);
 	m_player_aircraft->SetVelocity(40.f, m_scrollspeed);
