@@ -1,3 +1,5 @@
+//D00238448:Joshua Thompson
+//d00241095:Ross Borromeo
 #pragma once
 #include "PostEffect.hpp"
 #include "ResourceIdentifiers.hpp"

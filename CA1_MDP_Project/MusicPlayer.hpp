@@ -1,3 +1,5 @@
+//D00238448:Joshua Thompson
+//d00241095:Ross Borromeo
 #pragma once
 #include "ResourceHolder.hpp"
 #include "ResourceIdentifiers.hpp"

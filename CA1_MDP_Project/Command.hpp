@@ -1,3 +1,5 @@
+//D00238448:Joshua Thompson
+//d00241095:Ross Borromeo
 #pragma once
 #include <functional>
 #include <SFML/System/Time.hpp>

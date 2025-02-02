@@ -1,3 +1,5 @@
+//D00238448:Joshua Thompson
+//d00241095:Ross Borromeo
 #pragma once
 #include "State.hpp"
 #include "Player.hpp"

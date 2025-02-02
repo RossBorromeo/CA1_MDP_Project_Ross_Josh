@@ -1,3 +1,5 @@
+//D00238448:Joshua Thompson
+//d00241095:Ross Borromeo
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "World.hpp"
