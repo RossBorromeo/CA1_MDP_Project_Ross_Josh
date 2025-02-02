@@ -17,16 +17,19 @@ PauseState::PauseState(StateStack& stack, Context context)
     m_paused_text.setString("Paused");
     m_paused_text.setCharacterSize(70);
     Utility::CentreOrigin(m_paused_text);
+    m_paused_text.setFillColor(sf::Color::Magenta);
     m_paused_text.setPosition(0.5f * view_size.x, 0.4f * view_size.y);
 
     m_instruction_text.setFont(font);
     m_instruction_text.setString("Backspace - Main Menu,");
     Utility::CentreOrigin(m_instruction_text);
+    m_instruction_text.setFillColor(sf::Color::Magenta);
     m_instruction_text.setPosition(0.5f * view_size.x, 0.6f * view_size.y);
 
     m_esc_text.setFont(font);
     m_esc_text.setString("ESC - Play On");
     Utility::CentreOrigin(m_esc_text);
+    m_esc_text.setFillColor(sf::Color::Magenta);
     m_esc_text.setPosition(0.5f * view_size.x, 0.7f * view_size.y);
 
     //Pause the music

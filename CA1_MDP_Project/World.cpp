@@ -195,20 +195,21 @@ void World::AdaptPlayerVelocity()
 void World::GenerateRandomEnemy()
 {
 	static sf::Clock spawn_timer;
-	sf::Time spawn_interval = sf::seconds(0.5f); // Spawn every 2 seconds
+	// Spawn every .4 seconds
+	sf::Time spawn_interval = sf::seconds(0.4f); 
 
 	if (spawn_timer.getElapsedTime() >= spawn_interval)
 	{
 		float screen_width = m_target.getSize().x;
 		float screen_height = m_target.getSize().y;
 
-		// Ensure enemies spawn inside the screen width
+		
 		float min_x = 50.f;
 		float max_x = screen_width - 50.f;
 
-		// Instead of spawning deep below, spawn slightly above the player
-		float min_y = m_camera.getCenter().y - screen_height / 2.f - 100.f; // Above screen
-		float max_y = m_camera.getCenter().y - screen_height / 2.f - 50.f; // Not too far
+		//spawn above the player
+		float min_y = m_camera.getCenter().y - screen_height / 2.f - 100.f; 
+		float max_y = m_camera.getCenter().y - screen_height / 2.f - 50.f; 
 
 		std::uniform_real_distribution<float> x_distribution(min_x, max_x);
 		std::uniform_real_distribution<float> y_distribution(min_y, max_y);
@@ -220,12 +221,10 @@ void World::GenerateRandomEnemy()
 		float x = x_distribution(m_rng);
 		float y = y_distribution(m_rng);
 
-		std::cout << "Enemy spawned at: " << x << ", " << y << std::endl; // Debug print
-
 		// Create enemy
 		std::unique_ptr<Aircraft> enemy = std::make_unique<Aircraft>(type, m_textures, m_fonts);
 		enemy->setPosition(x, y);
-		enemy->setRotation(180.f); // Face downward
+		enemy->setRotation(180.f);
 
 		// Add to scene graph
 		m_scene_layers[static_cast<int>(SceneLayers::kUpperAir)]->AttachChild(std::move(enemy));
@@ -346,19 +345,19 @@ void World::HandleCollisions()
 			auto& player = static_cast<Aircraft&>(*pair.first);
 			auto& enemy = static_cast<Aircraft&>(*pair.second);
 			//Collision response
-			player.Damage(enemy.GetHitPoints());
+			player.Damage(5);
 			enemy.Destroy();
 		}
 
-		else if (MatchesCategories(pair, ReceiverCategories::kPlayerAircraft, ReceiverCategories::kPickup))
-		{
-			auto& player = static_cast<Aircraft&>(*pair.first);
-			auto& pickup = static_cast<Pickup&>(*pair.second);
+		//else if (MatchesCategories(pair, ReceiverCategories::kPlayerAircraft, ReceiverCategories::kPickup))
+		//{
+		//	auto& player = static_cast<Aircraft&>(*pair.first);
+		//	auto& pickup = static_cast<Pickup&>(*pair.second);
 			//Collision response
-			pickup.Apply(player);
-			pickup.Destroy();
-			player.PlayLocalSound(m_command_queue, SoundEffect::kCollectPickup);
-		}
+		//	pickup.Apply(player);
+		//	pickup.Destroy();
+		//	player.PlayLocalSound(m_command_queue, SoundEffect::kCollectPickup);
+		//}
 		else if (MatchesCategories(pair, ReceiverCategories::kPlayerAircraft, ReceiverCategories::kEnemyProjectile) || MatchesCategories(pair, ReceiverCategories::kEnemyAircraft, ReceiverCategories::kAlliedProjectile))
 		{
 			auto& aircraft = static_cast<Aircraft&>(*pair.first);

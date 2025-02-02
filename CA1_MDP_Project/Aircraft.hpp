@@ -17,7 +17,7 @@ public:
 
 	void IncreaseFireRate();
 	void IncreaseFireSpread();
-	void CollectMissile(unsigned int count);
+	//void CollectMissile(unsigned int count);
 
 	void UpdateTexts();
 	void UpdateMovementPattern(sf::Time dt);
@@ -37,8 +37,8 @@ private:
 	virtual void UpdateCurrent(sf::Time dt, CommandQueue& commands) override;
 	void CheckProjectileLaunch(sf::Time dt, CommandQueue& commands);
 	bool IsAllied() const;
-	void CreatePickup(SceneNode& node, const TextureHolder& textures) const;
-	void CheckPickupDrop(CommandQueue& commands);
+	//void CreatePickup(SceneNode& node, const TextureHolder& textures) const;
+	//void CheckPickupDrop(CommandQueue& commands);
 	void UpdateRollAnimation();
 
 private:

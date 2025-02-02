@@ -1,7 +1,7 @@
 #include "MusicPlayer.hpp"
 
 MusicPlayer::MusicPlayer()
-	: m_volume(50.f)
+	: m_volume(35.f)
 {
 	m_filenames[MusicThemes::kMenuTheme] = "Media/Music/MenuMusic.mp3";
 	m_filenames[MusicThemes::kMissionTheme] = "Media/Music/GameMusic.mp3";

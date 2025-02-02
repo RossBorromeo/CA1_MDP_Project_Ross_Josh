@@ -41,10 +41,10 @@ Aircraft::Aircraft(AircraftType type, const TextureHolder& textures, const FontH
 	, m_is_firing(false)
 	, m_is_launching_missile(false)
 	, m_fire_countdown(sf::Time::Zero)
-	, m_missile_ammo(2)
+	//, m_missile_ammo(0)
 	, m_is_marked_for_removal(false)
 	, m_show_explosion(true)
-	, m_spawned_pickup(false)
+	//, m_spawned_pickup(false)
 	, m_played_explosion_sound(false)
 
 {
@@ -66,11 +66,11 @@ Aircraft::Aircraft(AircraftType type, const TextureHolder& textures, const FontH
 			CreateProjectile(node, ProjectileType::kMissile, 0.f, 0.5f, textures);
 		};
 
-	m_drop_pickup_command.category = static_cast<int>(ReceiverCategories::kScene);
-	m_drop_pickup_command.action = [this, &textures](SceneNode& node, sf::Time dt)
-		{
-			CreatePickup(node, textures);
-		};
+	//m_drop_pickup_command.category = static_cast<int>(ReceiverCategories::kScene);
+	//m_drop_pickup_command.action = [this, &textures](SceneNode& node, sf::Time dt)
+	//	{
+	//		CreatePickup(node, textures);
+	//	};
 
 	std::string* health = new std::string("");
 	std::unique_ptr<TextNode> health_display(new TextNode(fonts, *health));
@@ -114,10 +114,10 @@ void Aircraft::IncreaseFireSpread()
 	}
 }
 
-void Aircraft::CollectMissile(unsigned int count)
-{
-	m_missile_ammo += count;
-}
+//void Aircraft::CollectMissile(unsigned int count)
+//{
+//	m_missile_ammo += count;
+//}
 
 void Aircraft::UpdateTexts()
 {
@@ -246,7 +246,7 @@ void Aircraft::UpdateCurrent(sf::Time dt, CommandQueue& commands)
 {
 	if (IsDestroyed())
 	{
-		CheckPickupDrop(commands);
+		//CheckPickupDrop(commands);
 		m_explosion.Update(dt);
 		// Play explosion sound only once
 		if (!m_played_explosion_sound)
@@ -304,24 +304,24 @@ bool Aircraft::IsAllied() const
 	return m_type == AircraftType::kBattleShip;
 }
 
-void Aircraft::CreatePickup(SceneNode& node, const TextureHolder& textures) const
-{
-	auto type = static_cast<PickupType>(Utility::RandomInt(static_cast<int>(PickupType::kPickupCount)));
-	std::unique_ptr<Pickup> pickup(new Pickup(type, textures));
-	pickup->setPosition(GetWorldPosition());
-	pickup->SetVelocity(0.f, 0.f);
-	node.AttachChild(std::move(pickup));
-}
+//void Aircraft::CreatePickup(SceneNode& node, const TextureHolder& textures) const
+//{
+	//auto type = static_cast<PickupType>(Utility::RandomInt(static_cast<int>(PickupType::kPickupCount)));
+	//std::unique_ptr<Pickup> pickup(new Pickup(type, textures));
+	//pickup->setPosition(GetWorldPosition());
+	//pickup->SetVelocity(0.f, 0.f);
+	//node.AttachChild(std::move(pickup));
+//}
 
-void Aircraft::CheckPickupDrop(CommandQueue& commands)
-{
+//void Aircraft::CheckPickupDrop(CommandQueue& commands)
+//{
 	//TODO Get rid of the magic number 3 here 
-	if (!IsAllied() && Utility::RandomInt(3) == 0 && !m_spawned_pickup)
-	{
-		commands.Push(m_drop_pickup_command);
-	}
-	m_spawned_pickup = true;
-}
+//	if (!IsAllied() && Utility::RandomInt(3) == 0 && !m_spawned_pickup)
+	//{
+		//commands.Push(m_drop_pickup_command);
+	//}
+	//m_spawned_pickup = true;
+//}
 
 void Aircraft::UpdateRollAnimation()
 {

@@ -33,12 +33,12 @@ struct ProjectileData
 	sf::IntRect m_texture_rect;
 };
 
-struct PickupData
-{
-	std::function<void(Aircraft&)> m_action;
-	TextureID m_texture;
-	sf::IntRect m_texture_rect;
-};
+//struct PickupData
+//{
+	//std::function<void(Aircraft&)> m_action;
+	//TextureID m_texture;
+	//sf::IntRect m_texture_rect;
+//};
 
 struct ParticleData
 {
@@ -48,6 +48,6 @@ struct ParticleData
 
 std::vector<AircraftData> InitializeAircraftData();
 std::vector<ProjectileData> InitializeProjectileData();
-std::vector<PickupData> InitializePickupData();
+//std::vector<PickupData> InitializePickupData();
 std::vector<ParticleData> InitializeParticleData();
 

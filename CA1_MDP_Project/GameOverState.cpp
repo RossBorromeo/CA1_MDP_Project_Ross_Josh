@@ -17,10 +17,13 @@ GameOverState::GameOverState(StateStack& stack, Context context)
     if (context.player->GetMissionStatus() == MissionStatus::kMissionSuccess)
     {
         m_game_over_text.setString("YOU WIN!");
+        m_game_over_text.setFillColor(sf::Color::Green);
     }
+
     else
     {
         m_game_over_text.setString("YOU LOSE!");
+        m_game_over_text.setFillColor(sf::Color::Red);
     }
 
     m_game_over_text.setCharacterSize(70);

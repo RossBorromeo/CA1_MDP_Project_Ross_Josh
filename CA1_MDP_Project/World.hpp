@@ -32,8 +32,8 @@ private:
 	void AdaptPlayerPosition();
 	void AdaptPlayerVelocity();
 
-	void SpawnEnemies();
-	void AddEnemy(AircraftType type, float relx, float rely);
+	//void SpawnEnemies();
+	//void AddEnemy(AircraftType type, float relx, float rely);
 	sf::FloatRect GetViewBounds() const;
 	sf::FloatRect GetBattleFieldBounds() const;
 
