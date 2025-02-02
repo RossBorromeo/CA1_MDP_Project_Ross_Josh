@@ -169,7 +169,6 @@
     <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ACheckCommit.hpp" />
     <ClInclude Include="Action.hpp" />
     <ClInclude Include="Aircraft.hpp" />
     <ClInclude Include="AircraftType.hpp" />
