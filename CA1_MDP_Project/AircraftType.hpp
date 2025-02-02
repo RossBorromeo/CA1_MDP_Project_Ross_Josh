@@ -2,7 +2,7 @@
 enum class AircraftType
 {
 	kBattleShip,
-	kRaptor,
+	kMeteor,
 	kAvenger,
 	kAircraftCount
 };

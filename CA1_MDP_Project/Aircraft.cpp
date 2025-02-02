@@ -20,8 +20,8 @@ TextureID ToTextureID(AircraftType type)
 	case AircraftType::kBattleShip:
 		return TextureID::kBattleShip;
 		break;
-	case AircraftType::kRaptor:
-		return TextureID::kRaptor;
+	case AircraftType::kMeteor:
+		return TextureID::kMeteor;
 		break;
 	case AircraftType::kAvenger:
 		return TextureID::kAvenger;

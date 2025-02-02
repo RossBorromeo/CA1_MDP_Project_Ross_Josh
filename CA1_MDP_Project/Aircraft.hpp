@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 #include "Entity.hpp"
 #include "AircraftType.hpp"
 #include "ResourceIdentifiers.hpp"
@@ -8,6 +7,7 @@
 #include "ProjectileType.hpp"
 #include <SFML/Graphics/Sprite.hpp>
 #include "Animation.hpp"
+
 
 class Aircraft : public Entity
 {

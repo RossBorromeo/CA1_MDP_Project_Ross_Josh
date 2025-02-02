@@ -12,6 +12,7 @@
 #include "SoundPlayer.hpp"
 
 #include <array>
+#include <random>
 
 class World : private sf::NonCopyable
 {
@@ -32,25 +33,23 @@ private:
 	void AdaptPlayerVelocity();
 
 	void SpawnEnemies();
-	void AddEnemies();
 	void AddEnemy(AircraftType type, float relx, float rely);
 	sf::FloatRect GetViewBounds() const;
 	sf::FloatRect GetBattleFieldBounds() const;
 
 	void DestroyEntitiesOutsideView();
 	void GuideMissiles();
-
 	void HandleCollisions();
 	void UpdateSounds();
 
+	// Random enemy spawning
+	void GenerateRandomEnemy();
 
 private:
 	struct SpawnPoint
 	{
-		SpawnPoint(AircraftType type, float x, float y) :m_type(type), m_x(x), m_y(y)
-		{
+		SpawnPoint(AircraftType type, float x, float y) : m_type(type), m_x(x), m_y(y) {}
 
-		}
 		AircraftType m_type;
 		float m_x;
 		float m_y;
@@ -72,9 +71,14 @@ private:
 
 	CommandQueue m_command_queue;
 
-	std::vector<SpawnPoint> m_enemy_spawn_points;
 	std::vector<Aircraft*> m_active_enemies;
 
 	BloomEffect m_bloom_effect;
-};
 
+	// Random number generation
+	std::random_device m_rd;
+	std::mt19937 m_rng;
+	std::uniform_real_distribution<float> m_x_distribution;
+	std::uniform_real_distribution<float> m_y_distribution;
+	std::uniform_int_distribution<int> m_type_distribution;
+};
