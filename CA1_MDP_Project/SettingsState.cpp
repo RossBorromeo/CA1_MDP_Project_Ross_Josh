@@ -9,17 +9,17 @@ SettingsState::SettingsState(StateStack& stack, Context context)
 	m_background_sprite.setTexture(context.textures->Get(TextureID::kTitleScreen));
 
 	//Build key binding buttons and labels
-	AddButtonLabel(Action::kMoveUp, 150.f, "Move Up", context);
-	AddButtonLabel(Action::kMoveDown, 200.f, "Move Down", context);
-	AddButtonLabel(Action::kMoveRight, 250.f, "Move Right", context);
-	AddButtonLabel(Action::kMoveLeft, 300.f, "Move Left", context);
-	AddButtonLabel(Action::kBulletFire, 350.f, "Fire", context);
-	AddButtonLabel(Action::kMissileFire, 400.f, "Missile Fire", context);
+	AddButtonLabel(Action::kMoveUp, 300.f, "Move Up", context);
+	AddButtonLabel(Action::kMoveDown, 350.f, "Move Down", context);
+	AddButtonLabel(Action::kMoveRight, 400.f, "Move Right", context);
+	AddButtonLabel(Action::kMoveLeft, 450.f, "Move Left", context);
+	AddButtonLabel(Action::kBulletFire, 500.f, "Fire", context);
+	AddButtonLabel(Action::kMissileFire, 550.f, "Missile Fire", context);
 
 	UpdateLabels();
 
 	auto back_button = std::make_shared<gui::Button>(context);
-	back_button->setPosition(80.f, 475.f);
+	back_button->setPosition(80.f, 600.f);
 	back_button->SetText("Back");
 	back_button->SetCallback(std::bind(&SettingsState::RequestStackPop, this));
 	m_gui_container.Pack(back_button);

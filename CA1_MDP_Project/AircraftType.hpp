@@ -3,6 +3,6 @@ enum class AircraftType
 {
 	kBattleShip,
 	kMeteor,
-	kAvenger,
+	//kAvenger,
 	kAircraftCount
 };

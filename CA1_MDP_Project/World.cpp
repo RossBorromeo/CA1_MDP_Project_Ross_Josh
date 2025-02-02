@@ -92,7 +92,7 @@ void World::LoadTextures()
 {
 	m_textures.Load(TextureID::kBattleShip, "Media/Textures/BattleShip.png");
 	m_textures.Load(TextureID::kMeteor, "Media/Textures/Asteroid.png");
-	m_textures.Load(TextureID::kAvenger, "Media/Textures/Meteor.png");
+	//m_textures.Load(TextureID::kAvenger, "Media/Textures/Meteor.png");
 	m_textures.Load(TextureID::kLandscape, "Media/Textures/Space.png");
 	m_textures.Load(TextureID::kBullet, "Media/Textures/Bullet.png");
 	m_textures.Load(TextureID::kMissile, "Media/Textures/Missile.png");
