@@ -23,6 +23,8 @@ SettingsState::SettingsState(StateStack& stack, Context context)
 	AddButtonLabel(Action::kBulletFire1, 350.f, "Fire P2", context);
 	AddButtonLabel(Action::kMissileFire1, 400.f, "Missile Fire P2", context);
 
+	
+
 
 
 	UpdateLabels();

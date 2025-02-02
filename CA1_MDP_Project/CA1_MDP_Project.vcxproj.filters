@@ -302,6 +302,9 @@
     <ClInclude Include="PickupType.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ACheckCommit.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ResourceHolder.inl">
