@@ -195,7 +195,7 @@ void World::AdaptPlayerVelocity()
 void World::GenerateRandomEnemy()
 {
 	static sf::Clock spawn_timer;
-	sf::Time spawn_interval = sf::seconds(0.8f); // Spawn every 2 seconds
+	sf::Time spawn_interval = sf::seconds(0.5f); // Spawn every 2 seconds
 
 	if (spawn_timer.getElapsedTime() >= spawn_interval)
 	{
@@ -213,7 +213,7 @@ void World::GenerateRandomEnemy()
 		std::uniform_real_distribution<float> x_distribution(min_x, max_x);
 		std::uniform_real_distribution<float> y_distribution(min_y, max_y);
 
-		std::vector<AircraftType> enemy_types = { AircraftType::kMeteor, AircraftType::kAvenger };
+		std::vector<AircraftType> enemy_types = { AircraftType::kMeteor};
 		std::uniform_int_distribution<int> type_distribution(0, enemy_types.size() - 1);
 		AircraftType type = enemy_types[type_distribution(m_rng)];
 

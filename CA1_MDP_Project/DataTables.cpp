@@ -17,7 +17,7 @@ std::vector<AircraftData> InitializeAircraftData()
     //data[static_cast<int>(AircraftType::kBattleShip)].m_has_roll_animation = true;
 
     data[static_cast<int>(AircraftType::kMeteor)].m_hitpoints = 20;
-    data[static_cast<int>(AircraftType::kMeteor)].m_speed = 80.f;
+    data[static_cast<int>(AircraftType::kMeteor)].m_speed = 150.f;
     data[static_cast<int>(AircraftType::kMeteor)].m_fire_interval = sf::Time::Zero;
     data[static_cast<int>(AircraftType::kMeteor)].m_texture = TextureID::kMeteor;
     data[static_cast<int>(AircraftType::kMeteor)].m_texture_rect = sf::IntRect(0, 0, 90, 90);

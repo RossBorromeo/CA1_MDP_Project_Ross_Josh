@@ -8,20 +8,26 @@ PauseState::PauseState(StateStack& stack, Context context)
     , m_background_sprite()
     , m_paused_text()
     , m_instruction_text()
+    , m_esc_text()
 {
     sf::Font& font = context.fonts->Get(Font::kMain);
     sf::Vector2f view_size = context.window->getView().getSize();
 
     m_paused_text.setFont(font);
-    m_paused_text.setString("Game Paused");
+    m_paused_text.setString("Paused");
     m_paused_text.setCharacterSize(70);
     Utility::CentreOrigin(m_paused_text);
     m_paused_text.setPosition(0.5f * view_size.x, 0.4f * view_size.y);
 
     m_instruction_text.setFont(font);
-    m_instruction_text.setString("Press backspace to return to main menu, esc to game");
+    m_instruction_text.setString("Backspace - Main Menu,");
     Utility::CentreOrigin(m_instruction_text);
     m_instruction_text.setPosition(0.5f * view_size.x, 0.6f * view_size.y);
+
+    m_esc_text.setFont(font);
+    m_esc_text.setString("ESC - Play On");
+    Utility::CentreOrigin(m_esc_text);
+    m_esc_text.setPosition(0.5f * view_size.x, 0.7f * view_size.y);
 
     //Pause the music
     GetContext().music->SetPaused(true);
@@ -39,6 +45,7 @@ void PauseState::Draw()
     window.draw(backgroundShape);
     window.draw(m_paused_text);
     window.draw(m_instruction_text);
+    window.draw(m_esc_text);
 }
 
 bool PauseState::Update(sf::Time dt)
