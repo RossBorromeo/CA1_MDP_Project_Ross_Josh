@@ -35,9 +35,9 @@ struct ProjectileData
 
 //struct PickupData
 //{
-	//std::function<void(Aircraft&)> m_action;
-	//TextureID m_texture;
-	//sf::IntRect m_texture_rect;
+//	std::function<void(Aircraft&)> m_action;
+//	TextureID m_texture;
+//	sf::IntRect m_texture_rect;
 //};
 
 struct ParticleData

@@ -3,8 +3,9 @@ enum class TextureID
 {
 	kLandscape,
 	kBattleShip,
+	kBattleShip1,
 	kMeteor,
-	//kAvenger,
+	kAvenger,
 	kMissile,
 	kTitleScreen,
 	kButtonNormal,

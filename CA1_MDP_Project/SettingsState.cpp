@@ -9,17 +9,26 @@ SettingsState::SettingsState(StateStack& stack, Context context)
 	m_background_sprite.setTexture(context.textures->Get(TextureID::kTitleScreen));
 
 	//Build key binding buttons and labels
-	AddButtonLabel(Action::kMoveUp, 300.f, "Move Up", context);
-	AddButtonLabel(Action::kMoveDown, 350.f, "Move Down", context);
-	AddButtonLabel(Action::kMoveRight, 400.f, "Move Right", context);
-	AddButtonLabel(Action::kMoveLeft, 450.f, "Move Left", context);
-	AddButtonLabel(Action::kBulletFire, 500.f, "Fire", context);
-	AddButtonLabel(Action::kMissileFire, 550.f, "Missile Fire", context);
+	AddButtonLabel(Action::kMoveUp, 150.f, "Move Up", context);
+	AddButtonLabel(Action::kMoveDown, 200.f, "Move Down", context);
+	AddButtonLabel(Action::kMoveRight, 250.f, "Move Right", context);
+	AddButtonLabel(Action::kMoveLeft, 300.f, "Move Left", context);
+	AddButtonLabel(Action::kBulletFire, 350.f, "Fire", context);
+	AddButtonLabel(Action::kMissileFire, 400.f, "Missile Fire", context);
+
+	AddButtonLabel(Action::kMoveUp1, 150.f, "Move Up P2", context);
+	AddButtonLabel(Action::kMoveDown1, 200.f, "Move Down P2", context);
+	AddButtonLabel(Action::kMoveRight1, 250.f, "Move Right P2", context);
+	AddButtonLabel(Action::kMoveLeft1, 300.f, "Move Left P2", context);
+	AddButtonLabel(Action::kBulletFire1, 350.f, "Fire P2", context);
+	AddButtonLabel(Action::kMissileFire1, 400.f, "Missile Fire P2", context);
+
+
 
 	UpdateLabels();
 
 	auto back_button = std::make_shared<gui::Button>(context);
-	back_button->setPosition(80.f, 600.f);
+	back_button->setPosition(80.f, 475.f);
 	back_button->SetText("Back");
 	back_button->SetCallback(std::bind(&SettingsState::RequestStackPop, this));
 	m_gui_container.Pack(back_button);
@@ -49,7 +58,7 @@ bool SettingsState::HandleEvent(const sf::Event& event)
 			is_key_binding = true;
 			if (event.type == sf::Event::KeyReleased)
 			{
-				GetContext().player->AssignKey(static_cast<Action>(action), event.key.code);
+				GetContext().player1->AssignKey(static_cast<Action>(action), event.key.code);
 				m_binding_buttons[action]->Deactivate();
 			}
 			break;
@@ -70,7 +79,7 @@ bool SettingsState::HandleEvent(const sf::Event& event)
 
 void SettingsState::UpdateLabels()
 {
-	Player& player = *GetContext().player;
+	Player& player = *GetContext().player1;
 	for (std::size_t i = 0; i < static_cast<int>(Action::kActionCount); ++i)
 	{
 		sf::Keyboard::Key key = player.GetAssignedKey(static_cast<Action>(i));
