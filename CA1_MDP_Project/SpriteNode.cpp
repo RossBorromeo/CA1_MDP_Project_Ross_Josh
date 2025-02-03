@@ -1,3 +1,4 @@
+//Ross - D00241095 | Josh - D00238448
 #include "SpriteNode.hpp"
 
 SpriteNode::SpriteNode(const sf::Texture& texture) :m_sprite(texture)

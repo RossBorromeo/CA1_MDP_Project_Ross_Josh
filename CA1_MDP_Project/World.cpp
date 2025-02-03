@@ -1,9 +1,12 @@
+//Ross - D00241095 | Josh - D00238448
 #include "World.hpp"
 #include "Pickup.hpp"
 #include "Projectile.hpp"
 #include "ParticleNode.hpp"
 #include "SoundNode.hpp"
 #include <iostream>
+
+//Ross + Josh was involved in writing in World.cpp (Ross - Random generated enemies + Updated Textures with our own + updated methods. Josh - Added 2nd player aircraft + updated methods) 
 
 World::World(sf::RenderTarget& output_target, FontHolder& font, SoundPlayer& sounds)
 	: m_target(output_target)
@@ -18,10 +21,10 @@ World::World(sf::RenderTarget& output_target, FontHolder& font, SoundPlayer& sou
 	, m_scrollspeed(-50.f)
 	, m_player_aircraft1(nullptr)
 	, m_player_aircraft2(nullptr)
-	, m_rng(m_rd()) // Initialize random number generator
+	, m_rng(m_rd()) //Random number generator
 	, m_x_distribution(m_world_bounds.left + 50.f, m_world_bounds.width - 50.f) // Random X positions
-	, m_y_distribution(-500.f, -100.f) // Random Y positions (above screen)
-	, m_type_distribution(0, 2) // 3 types of enemies
+	, m_y_distribution(-500.f, -100.f) // Random Y positions
+	, m_type_distribution(0, 2) //3 types of enemies
 {
 	m_scene_texture.create(m_target.getSize().x, m_target.getSize().y);
 	LoadTextures();
@@ -106,6 +109,7 @@ bool World::HasPlayer2ReachedEnd() const
 	return !m_world_bounds.contains(m_player_aircraft2->getPosition());
 }
 
+//Ross - Updated and added our own textures for our game.
 void World::LoadTextures()
 {
 	m_textures.Load(TextureID::kBattleShip, "Media/Textures/BattleShip.png");
@@ -113,7 +117,7 @@ void World::LoadTextures()
 	m_textures.Load(TextureID::kMeteor, "Media/Textures/Asteroid.png");
 	m_textures.Load(TextureID::kAvenger, "Media/Textures/Meteor.png");
 	m_textures.Load(TextureID::kLandscape, "Media/Textures/Space.png");
-	m_textures.Load(TextureID::kBullet, "Media/Textures/Bullet.png");
+	m_textures.Load(TextureID::kBullet, "Media/Textures/Laser.png");
 	m_textures.Load(TextureID::kMissile, "Media/Textures/Missile.png");
 
 	m_textures.Load(TextureID::kHealthRefill, "Media/Textures/HealthRefill.png");
@@ -248,6 +252,7 @@ void World::AdaptPlayer2Velocity()
 	m_player_aircraft2->Accelerate(0.f, m_scrollspeed);
 }
 
+//Ross - Added code that allowed the meteors to spawn in randomly, creating the main gameplay aspect of our game.
 void World::GenerateRandomEnemy()
 {
 	static sf::Clock spawn_timer;
@@ -262,9 +267,9 @@ void World::GenerateRandomEnemy()
 		float min_x = 50.f;
 		float max_x = screen_width - 50.f;
 
-		// Instead of spawning deep below, spawn slightly above the player
-		float min_y = m_camera.getCenter().y - screen_height / 2.f - 100.f; // Above screen
-		float max_y = m_camera.getCenter().y - screen_height / 2.f - 50.f; // Not too far
+		//Spawn Above player
+		float min_y = m_camera.getCenter().y - screen_height / 2.f - 100.f; 
+		float max_y = m_camera.getCenter().y - screen_height / 2.f - 50.f; 
 
 		std::uniform_real_distribution<float> x_distribution(min_x, max_x);
 		std::uniform_real_distribution<float> y_distribution(min_y, max_y);
@@ -276,12 +281,10 @@ void World::GenerateRandomEnemy()
 		float x = x_distribution(m_rng);
 		float y = y_distribution(m_rng);
 
-		std::cout << "Enemy spawned at: " << x << ", " << y << std::endl; // Debug print
-
 		// Create enemy
 		std::unique_ptr<Aircraft> enemy = std::make_unique<Aircraft>(type, m_textures, m_fonts);
 		enemy->setPosition(x, y);
-		enemy->setRotation(180.f); // Face downward
+		enemy->setRotation(180.f); 
 
 		// Add to scene graph
 		m_scene_layers[static_cast<int>(SceneLayers::kUpperAir)]->AttachChild(std::move(enemy));

@@ -1,5 +1,7 @@
+//Ross - D00241095 | Josh - D00238448
 #include "MusicPlayer.hpp"
 
+//Ross - added new Music and In game music for our game.
 MusicPlayer::MusicPlayer()
 	: m_volume(7.f)
 {

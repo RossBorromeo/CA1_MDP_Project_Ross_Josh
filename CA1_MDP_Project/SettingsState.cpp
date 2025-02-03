@@ -2,33 +2,36 @@
 #include "ResourceHolder.hpp"
 #include "Utility.hpp"
 
+#include <iostream>
+
 SettingsState::SettingsState(StateStack& stack, Context context)
 	: State(stack, context)
 	, m_gui_container()
 {
 	m_background_sprite.setTexture(context.textures->Get(TextureID::kTitleScreen));
 
-	//Build key binding buttons and labels
-	AddButtonLabel(Action::kMoveUp, 150.f, "Move Up", context);
-	AddButtonLabel(Action::kMoveDown, 200.f, "Move Down", context);
-	AddButtonLabel(Action::kMoveRight, 250.f, "Move Right", context);
-	AddButtonLabel(Action::kMoveLeft, 300.f, "Move Left", context);
-	AddButtonLabel(Action::kBulletFire, 350.f, "Fire", context);
-	AddButtonLabel(Action::kMissileFire, 400.f, "Missile Fire", context);
-
-	AddButtonLabel(Action::kMoveUp1, 150.f, "Move Up P2", context);
-	AddButtonLabel(Action::kMoveDown1, 200.f, "Move Down P2", context);
-	AddButtonLabel(Action::kMoveRight1, 250.f, "Move Right P2", context);
-	AddButtonLabel(Action::kMoveLeft1, 300.f, "Move Left P2", context);
-	AddButtonLabel(Action::kBulletFire1, 350.f, "Fire P2", context);
-	AddButtonLabel(Action::kMissileFire1, 400.f, "Missile Fire P2", context);
 
 
+	// Player 1 Controls
+	AddButtonLabel(Action::kMoveUp, 350.f, "Move Up P1", context, true);
+	AddButtonLabel(Action::kMoveDown, 400.f, "Move Down P1", context, true);
+	AddButtonLabel(Action::kMoveRight, 450.f, "Move Right P1", context, true);
+	AddButtonLabel(Action::kMoveLeft, 500.f, "Move Left P1", context, true);
+	AddButtonLabel(Action::kBulletFire, 550.f, "Fire P1", context, true);
+	AddButtonLabel(Action::kMissileFire, 600.f, "Missile Fire P1", context, true);
+
+	// Player 2 Controls
+	AddButtonLabel(Action::kMoveUp1, 150.f, "Move Up P2", context, false);
+	AddButtonLabel(Action::kMoveDown1, 200.f, "Move Down P2", context, false);
+	AddButtonLabel(Action::kMoveRight1, 250.f, "Move Right P2", context, false);
+	AddButtonLabel(Action::kMoveLeft1, 300.f, "Move Left P2", context, false);
+	AddButtonLabel(Action::kBulletFire1, 350.f, "Fire P2", context, false);
+	AddButtonLabel(Action::kMissileFire1, 400.f, "Missile Fire P2", context, false);
 
 	UpdateLabels();
 
 	auto back_button = std::make_shared<gui::Button>(context);
-	back_button->setPosition(80.f, 475.f);
+	back_button->setPosition(80.f, 675.f);
 	back_button->SetText("Back");
 	back_button->SetCallback(std::bind(&SettingsState::RequestStackPop, this));
 	m_gui_container.Pack(back_button);
@@ -50,22 +53,28 @@ bool SettingsState::HandleEvent(const sf::Event& event)
 {
 	bool is_key_binding = false;
 
-	//Iterate through all of the key binding buttons to see if they are being presssed, waiting for the user to enter a key
+	// Iterate through all key binding buttons for Player 1 and Player 2
 	for (std::size_t action = 0; action < static_cast<int>(Action::kActionCount); ++action)
 	{
-		if (m_binding_buttons[action]->IsActive())
+		if (m_binding_buttons[action] && m_binding_buttons[action]->IsActive())
 		{
 			is_key_binding = true;
+
 			if (event.type == sf::Event::KeyReleased)
 			{
-				GetContext().player1->AssignKey(static_cast<Action>(action), event.key.code);
+				if (action <= static_cast<int>(Action::kMissileFire)) {
+					GetContext().player1->AssignKey(static_cast<Action>(action), event.key.code);
+				}
+				else {
+					GetContext().player2->AssignKey(static_cast<Action>(action), event.key.code);
+				}
 				m_binding_buttons[action]->Deactivate();
 			}
 			break;
 		}
 	}
 
-	//If pressed button changed key bindings, then update the labels
+	// If key bindings changed, update the labels
 	if (is_key_binding)
 	{
 		UpdateLabels();
@@ -79,24 +88,46 @@ bool SettingsState::HandleEvent(const sf::Event& event)
 
 void SettingsState::UpdateLabels()
 {
-	Player& player = *GetContext().player1;
+	Player& player1 = *GetContext().player1;
+	Player& player2 = *GetContext().player2;
+
 	for (std::size_t i = 0; i < static_cast<int>(Action::kActionCount); ++i)
 	{
-		sf::Keyboard::Key key = player.GetAssignedKey(static_cast<Action>(i));
-		m_binding_labels[i]->SetText(Utility::toString(key));
+		sf::Keyboard::Key key;
+		if (i <= static_cast<int>(Action::kMissileFire)) {
+			key = player1.GetAssignedKey(static_cast<Action>(i));
+		}
+		else {
+			key = player2.GetAssignedKey(static_cast<Action>(i));
+		}
+
+		if (m_binding_labels[i]) {
+			m_binding_labels[i]->SetText(Utility::toString(key));
+		}
 	}
 }
 
-void SettingsState::AddButtonLabel(Action action, float y, const std::string& text, Context context)
+void SettingsState::AddButtonLabel(Action action, float y, const std::string& text, Context context, bool isPlayer1)
 {
-	m_binding_buttons[static_cast<int>(action)] = std::make_shared<gui::Button>(context);
-	m_binding_buttons[static_cast<int>(action)]->setPosition(80.f, y);
-	m_binding_buttons[static_cast<int>(action)]->SetText(text);
-	m_binding_buttons[static_cast<int>(action)]->SetToggle(true);
+	int actionIndex = static_cast<int>(action);
 
-	m_binding_labels[static_cast<int>(action)] = std::make_shared<gui::Label>("", *context.fonts);
-	m_binding_labels[static_cast<int>(action)]->setPosition(300.f, y + 15.f);
+	// Ensure actionIndex is valid
+	if (actionIndex < 0 || actionIndex >= static_cast<int>(Action::kActionCount)) {
+		std::cerr << "ERROR: Invalid action index: " << actionIndex << std::endl;
+		return;
+	}
 
-	m_gui_container.Pack(m_binding_buttons[static_cast<int>(action)]);
-	m_gui_container.Pack(m_binding_labels[static_cast<int>(action)]);
+	// Create the button
+	m_binding_buttons[actionIndex] = std::make_shared<gui::Button>(context);
+	m_binding_buttons[actionIndex]->setPosition(isPlayer1 ? 80.f : 500.f, y);  // Player 1 on left, Player 2 on right
+	m_binding_buttons[actionIndex]->SetText(text);
+	m_binding_buttons[actionIndex]->SetToggle(true);
+
+	// Create the label
+	m_binding_labels[actionIndex] = std::make_shared<gui::Label>("", *context.fonts);
+	m_binding_labels[actionIndex]->setPosition(isPlayer1 ? 300.f : 720.f, y + 15.f);  // Player 1 on left, Player 2 on right
+
+	// Pack into GUI container
+	m_gui_container.Pack(m_binding_buttons[actionIndex]);
+	m_gui_container.Pack(m_binding_labels[actionIndex]);
 }

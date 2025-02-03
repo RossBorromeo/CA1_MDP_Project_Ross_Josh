@@ -1,3 +1,4 @@
+//Ross - D00241095 | Josh - D00238448
 #include "GameOverState.hpp"
 #include "ResourceHolder.hpp"
 #include <SFML/Graphics/RenderWindow.hpp>
@@ -26,11 +27,13 @@ GameOverState::GameOverState(StateStack& stack, Context context)
 
     if (player1Status == MissionStatus::kMissionSuccess)
     {
-        m_game_over_text.setString("Mission Success for Player 1!");
+        m_game_over_text.setString("PLAYER 1 WINS!");
+        m_game_over_text.setFillColor(sf::Color::Green);
     }
     else if (player2Status == MissionStatus::kMissionSuccess)
     {
-        m_game_over_text.setString("Mission Success for Player 2!");
+        m_game_over_text.setString("PLAYER 2 WINS!");
+        m_game_over_text.setFillColor(sf::Color::Green);
     }
     else
     {

@@ -1,3 +1,4 @@
+//Ross - D00241095 | Josh - D00238448
 #include "Entity.hpp"
 
 Entity::Entity(int hitpoints)
