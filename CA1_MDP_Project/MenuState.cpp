@@ -1,8 +1,10 @@
+//Ross - D00241095 | Josh - D00238448
 #include "MenuState.hpp"
 #include "ResourceHolder.hpp"
 #include "Utility.hpp"
 #include "Button.hpp"
 
+//Ross - Adjusted Button to centre of the screen
 MenuState::MenuState(StateStack& stack, Context context)
     :State(stack, context)
 {

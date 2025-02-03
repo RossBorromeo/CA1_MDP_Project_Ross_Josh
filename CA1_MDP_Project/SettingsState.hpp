@@ -1,3 +1,4 @@
+//Ross - D00241095 | Josh - D00238448
 #pragma once
 #include "State.hpp"
 #include "Player.hpp"
@@ -19,7 +20,7 @@ public:
 
 private:
 	void UpdateLabels();
-	void AddButtonLabel(Action action, float y, const std::string& text, Context context);
+	void AddButtonLabel(Action action, float y, const std::string& text, Context context, bool isPlayer1);
 
 private:
 	sf::Sprite m_background_sprite;

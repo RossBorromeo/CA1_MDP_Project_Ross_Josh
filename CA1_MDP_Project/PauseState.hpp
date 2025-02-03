@@ -1,3 +1,4 @@
+//Ross - D00241095 | Josh - D00238448
 #pragma once
 #include "State.hpp"
 #include <SFML/Graphics/Sprite.hpp>
@@ -16,5 +17,6 @@ private:
 	sf::Sprite m_background_sprite;
 	sf::Text m_paused_text;
 	sf::Text m_instruction_text;
+	sf::Text m_esc_text;
 };
 

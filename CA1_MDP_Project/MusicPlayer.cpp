@@ -1,10 +1,12 @@
+//Ross - D00241095 | Josh - D00238448
 #include "MusicPlayer.hpp"
 
+//Ross - added new Music and In game music for our game.
 MusicPlayer::MusicPlayer()
-	: m_volume(10.f)
+	: m_volume(7.f)
 {
-	m_filenames[MusicThemes::kMenuTheme] = "Media/Music/SLOWER-TEMPO2019-12-11_-_Retro_Platforming_-_David_Fesliyan.mp3";
-	m_filenames[MusicThemes::kMissionTheme] = "Media/Music/MissionTheme.ogg";
+	m_filenames[MusicThemes::kMenuTheme] = "Media/Music/MenuMusic.mp3";
+	m_filenames[MusicThemes::kMissionTheme] = "Media/Music/GameMusic.mp3";
 }
 
 void MusicPlayer::Play(MusicThemes theme)

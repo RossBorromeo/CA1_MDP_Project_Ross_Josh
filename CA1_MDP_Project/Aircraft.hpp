@@ -1,3 +1,4 @@
+//Ross - D00241095 | Josh - D00238448
 #pragma once
 #include "Entity.hpp"
 #include "AircraftType.hpp"
@@ -36,9 +37,10 @@ private:
 	virtual void DrawCurrent(sf::RenderTarget& target, sf::RenderStates states) const;
 	virtual void UpdateCurrent(sf::Time dt, CommandQueue& commands) override;
 	void CheckProjectileLaunch(sf::Time dt, CommandQueue& commands);
-	bool IsAllied() const;
-	void CreatePickup(SceneNode& node, const TextureHolder& textures) const;
-	void CheckPickupDrop(CommandQueue& commands);
+	bool IsAllied1() const;
+	bool IsAllied2() const;
+	/*void CreatePickup(SceneNode& node, const TextureHolder& textures) const;
+	void CheckPickupDrop(CommandQueue& commands);*/
 	void UpdateRollAnimation();
 
 private:
@@ -53,7 +55,7 @@ private:
 
 	Command m_fire_command;
 	Command m_missile_command;
-	Command m_drop_pickup_command;
+	/*Command m_drop_pickup_command;*/
 
 	unsigned int m_fire_rate;
 	unsigned int m_spread_level;
@@ -65,7 +67,7 @@ private:
 
 	bool m_is_marked_for_removal;
 	bool m_show_explosion;
-	bool m_spawned_pickup;
+	/*bool m_spawned_pickup;*/
 	bool m_played_explosion_sound;
 
 };

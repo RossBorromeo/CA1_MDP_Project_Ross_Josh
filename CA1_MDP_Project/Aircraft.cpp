@@ -1,11 +1,12 @@
+//Ross - D00241095 | Josh - D00238448
 #include "Aircraft.hpp"
 #include "TextureID.hpp"
 #include "ResourceHolder.hpp"
 #include <SFML/Graphics/RenderTarget.hpp>
 #include "DataTables.hpp"
 #include "Projectile.hpp"
-#include "PickupType.hpp"
-#include "Pickup.hpp"
+//#include "PickupType.hpp"
+//#include "Pickup.hpp"
 #include "SoundNode.hpp"
 
 namespace
@@ -19,6 +20,9 @@ TextureID ToTextureID(AircraftType type)
 	{
 	case AircraftType::kBattleShip:
 		return TextureID::kBattleShip;
+		break;
+	case AircraftType::kBattleShip1:
+		return TextureID::kBattleShip1;
 		break;
 	case AircraftType::kMeteor:
 		return TextureID::kMeteor;
@@ -44,10 +48,10 @@ Aircraft::Aircraft(AircraftType type, const TextureHolder& textures, const FontH
 	, m_is_firing(false)
 	, m_is_launching_missile(false)
 	, m_fire_countdown(sf::Time::Zero)
-	, m_missile_ammo(2)
+	, m_missile_ammo(0)
 	, m_is_marked_for_removal(false)
 	, m_show_explosion(true)
-	, m_spawned_pickup(false)
+	/*, m_spawned_pickup(false)*/
 	, m_played_explosion_sound(false)
 
 {
@@ -69,18 +73,19 @@ Aircraft::Aircraft(AircraftType type, const TextureHolder& textures, const FontH
 			CreateProjectile(node, ProjectileType::kMissile, 0.f, 0.5f, textures);
 		};
 
-	m_drop_pickup_command.category = static_cast<int>(ReceiverCategories::kScene);
+	/*m_drop_pickup_command.category = static_cast<int>(ReceiverCategories::kScene);
 	m_drop_pickup_command.action = [this, &textures](SceneNode& node, sf::Time dt)
 		{
 			CreatePickup(node, textures);
-		};
+		};*/
 
 	std::string* health = new std::string("");
 	std::unique_ptr<TextNode> health_display(new TextNode(fonts, *health));
 	m_health_display = health_display.get();
 	AttachChild(std::move(health_display));
 
-	if (Aircraft::GetCategory() == static_cast<int>(ReceiverCategories::kPlayerAircraft))
+	if (Aircraft::GetCategory() == static_cast<int>(ReceiverCategories::kPlayerAircraft1) ||
+		Aircraft::GetCategory() == static_cast<int>(ReceiverCategories::kPlayerAircraft2))
 	{
 		std::string* missile_ammo = new std::string("");
 		std::unique_ptr<TextNode> missile_display(new TextNode(fonts, *missile_ammo));
@@ -88,15 +93,22 @@ Aircraft::Aircraft(AircraftType type, const TextureHolder& textures, const FontH
 		AttachChild(std::move(missile_display));
 	}
 
+
 	UpdateTexts();
 }
 
 unsigned int Aircraft::GetCategory() const
 {
-	if (IsAllied())
+	if (IsAllied1())
 	{
-		return static_cast<unsigned int>(ReceiverCategories::kPlayerAircraft);
+		return static_cast<unsigned int>(ReceiverCategories::kPlayerAircraft1);
 	}
+
+	if (IsAllied2())
+	{
+		return static_cast<unsigned int>(ReceiverCategories::kPlayerAircraft2);
+	}
+
 	return static_cast<unsigned int>(ReceiverCategories::kEnemyAircraft);
 
 }
@@ -192,7 +204,7 @@ void Aircraft::LaunchMissile()
 
 void Aircraft::CreateBullet(SceneNode& node, const TextureHolder& textures) const
 {
-	ProjectileType type = IsAllied() ? ProjectileType::kAlliedBullet : ProjectileType::kEnemyBullet;
+	ProjectileType type = IsAllied1() ? ProjectileType::kAlliedBullet : IsAllied2() ? ProjectileType::kAlliedBullet : ProjectileType::kEnemyBullet;
 	switch (m_spread_level)
 	{
 	case 1:
@@ -217,7 +229,8 @@ void Aircraft::CreateProjectile(SceneNode& node, ProjectileType type, float x_of
 	sf::Vector2f offset(x_offset * m_sprite.getGlobalBounds().width, y_offset * m_sprite.getGlobalBounds().height);
 	sf::Vector2f velocity(0, projectile->GetMaxSpeed());
 
-	float sign = IsAllied() ? -1.f : 1.f;
+	float sign = IsAllied1() ? -1.f : (IsAllied2() ? -1.f : 1.f);
+
 	projectile->setPosition(GetWorldPosition() + offset * sign);
 	projectile->SetVelocity(velocity * sign);
 	node.AttachChild(std::move(projectile));
@@ -249,7 +262,7 @@ void Aircraft::UpdateCurrent(sf::Time dt, CommandQueue& commands)
 {
 	if (IsDestroyed())
 	{
-		CheckPickupDrop(commands);
+		/*CheckPickupDrop(commands);*/
 		m_explosion.Update(dt);
 		// Play explosion sound only once
 		if (!m_played_explosion_sound)
@@ -274,23 +287,26 @@ void Aircraft::UpdateCurrent(sf::Time dt, CommandQueue& commands)
 
 void Aircraft::CheckProjectileLaunch(sf::Time dt, CommandQueue& commands)
 {
-	if (!IsAllied())
-	{
-		Fire();
-	}
-
 	if (m_is_firing && m_fire_countdown <= sf::Time::Zero)
 	{
-		PlayLocalSound(commands, IsAllied() ? SoundEffect::kEnemyGunfire : SoundEffect::kAlliedGunfire);
+		if (IsAllied1())
+			PlayLocalSound(commands, SoundEffect::kAlliedGunfire);
+		else if (IsAllied2())
+			PlayLocalSound(commands, SoundEffect::kAlliedGunfire);
+		else
+			PlayLocalSound(commands, SoundEffect::kEnemyGunfire);
+
 		commands.Push(m_fire_command);
 		m_fire_countdown += Table[static_cast<int>(m_type)].m_fire_interval / (m_fire_rate + 1.f);
+
+		// Only reset `m_is_firing` if it's supposed to fire once per press
+		// If you want continuous fire when holding down the button, remove this.
 		m_is_firing = false;
 	}
 	else if (m_fire_countdown > sf::Time::Zero)
 	{
 		//Wait, can't fire
 		m_fire_countdown -= dt;
-		m_is_firing = false;
 	}
 
 	//Missile launch
@@ -302,29 +318,35 @@ void Aircraft::CheckProjectileLaunch(sf::Time dt, CommandQueue& commands)
 	}
 }
 
-bool Aircraft::IsAllied() const
+
+bool Aircraft::IsAllied1() const
 {
 	return m_type == AircraftType::kBattleShip;
 }
 
-void Aircraft::CreatePickup(SceneNode& node, const TextureHolder& textures) const
+bool Aircraft::IsAllied2() const
 {
-	auto type = static_cast<PickupType>(Utility::RandomInt(static_cast<int>(PickupType::kPickupCount)));
-	std::unique_ptr<Pickup> pickup(new Pickup(type, textures));
-	pickup->setPosition(GetWorldPosition());
-	pickup->SetVelocity(0.f, 0.f);
-	node.AttachChild(std::move(pickup));
+	return m_type == AircraftType::kBattleShip1;
 }
 
-void Aircraft::CheckPickupDrop(CommandQueue& commands)
-{
-	//TODO Get rid of the magic number 3 here 
-	if (!IsAllied() && Utility::RandomInt(3) == 0 && !m_spawned_pickup)
-	{
-		commands.Push(m_drop_pickup_command);
-	}
-	m_spawned_pickup = true;
-}
+//void Aircraft::CreatePickup(SceneNode& node, const TextureHolder& textures) const
+//{
+//	auto type = static_cast<PickupType>(Utility::RandomInt(static_cast<int>(PickupType::kPickupCount)));
+//	std::unique_ptr<Pickup> pickup(new Pickup(type, textures));
+//	pickup->setPosition(GetWorldPosition());
+//	pickup->SetVelocity(0.f, 0.f);
+//	node.AttachChild(std::move(pickup));
+//}
+
+//void Aircraft::CheckPickupDrop(CommandQueue& commands)
+//{
+//	//TODO Get rid of the magic number 3 here 
+//	if (!IsAllied1() || !IsAllied2() && Utility::RandomInt(3) == 0 && !m_spawned_pickup)
+//	{
+//		commands.Push(m_drop_pickup_command);
+//	}
+//	m_spawned_pickup = true;
+//}
 
 void Aircraft::UpdateRollAnimation()
 {

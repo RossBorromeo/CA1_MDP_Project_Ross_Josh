@@ -1,3 +1,4 @@
+//Ross - D00241095 | Josh - D00238448
 #include "TitleState.hpp"
 #include <SFML/Graphics/RenderWindow.hpp>
 #include "ResourceHolder.hpp"
@@ -7,9 +8,11 @@ TitleState::TitleState(StateStack& stack, Context context) : State(stack, contex
 {
     m_background_sprite.setTexture(context.textures->Get(TextureID::kTitleScreen));
     m_text.setFont(context.fonts->Get(Font::kMain));
-    m_text.setString("Press any key to continue");
+    m_text.setString("LETS PLAY!");
+    m_text.setCharacterSize(70);
+    m_text.setFillColor(sf::Color::Magenta);
     Utility::CentreOrigin(m_text);
-    m_text.setPosition(context.window->getView().getSize() / 2.f);
+    m_text.setPosition(520, 500);
 }
 
 

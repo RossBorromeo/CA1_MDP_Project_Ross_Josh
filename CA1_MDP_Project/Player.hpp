@@ -1,3 +1,4 @@
+//Ross - D00241095 | Josh - D00238448
 #pragma once
 #include <SFML/Window/Event.hpp>
 #include "Action.hpp"
@@ -22,12 +23,14 @@ public:
 
 private:
 	void InitialiseActions();
+
 	static bool IsRealTimeAction(Action action);
 
 private:
 	std::map<sf::Keyboard::Key, Action> m_key_binding;
 	std::map<Action, Command> m_action_binding;
 	MissionStatus m_current_mission_status;
+
 
 };
 

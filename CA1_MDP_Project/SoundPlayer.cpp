@@ -1,3 +1,4 @@
+//Ross - D00241095 | Josh - D00238448
 #include "SoundPlayer.hpp"
 
 #include "SoundEffect.hpp"
@@ -6,7 +7,7 @@
 
 #include <cmath>
 
-
+//Ross - added new sound effects for our ships and meteors.
 namespace
 {
 	// Sound coordinate system, point of view of a player in front of the screen:
@@ -19,12 +20,12 @@ namespace
 
 SoundPlayer::SoundPlayer()
 {
-	m_sound_buffers.Load(SoundEffect::kAlliedGunfire, "Media/Sound/AlliedGunfire.wav");
-	m_sound_buffers.Load(SoundEffect::kEnemyGunfire, "Media/Sound/EnemyGunfire.wav");
-	m_sound_buffers.Load(SoundEffect::kExplosion1, "Media/Sound/Explosion1.wav");
-	m_sound_buffers.Load(SoundEffect::kExplosion2, "Media/Sound/Explosion2.wav");
+	m_sound_buffers.Load(SoundEffect::kAlliedGunfire, "Media/Sound/LaserShot.wav");
+	m_sound_buffers.Load(SoundEffect::kEnemyGunfire, "Media/Sound/LaserShot.wav");
+	m_sound_buffers.Load(SoundEffect::kExplosion1, "Media/Sound/Explosion.wav");
+	m_sound_buffers.Load(SoundEffect::kExplosion2, "Media/Sound/Explosion.wav");
 	m_sound_buffers.Load(SoundEffect::kLaunchMissile, "Media/Sound/LaunchMissile.wav");
-	m_sound_buffers.Load(SoundEffect::kCollectPickup, "Media/Sound/CollectPickup.wav");
+	//m_sound_buffers.Load(SoundEffect::kCollectPickup, "Media/Sound/CollectPickup.wav");
 	m_sound_buffers.Load(SoundEffect::kButton, "Media/Sound/Button.wav");
 
 	// Listener points towards the screen (default in SFML)

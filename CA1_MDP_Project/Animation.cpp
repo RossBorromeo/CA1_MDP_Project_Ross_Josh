@@ -1,3 +1,4 @@
+//Ross - D00241095 | Josh - D00238448
 #include "Animation.hpp"
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>

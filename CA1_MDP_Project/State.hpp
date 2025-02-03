@@ -1,3 +1,4 @@
+//Ross - D00241095 | Josh - D00238448
 #pragma once
 #include "ResourceIdentifiers.hpp"
 #include "StateID.hpp"
@@ -22,11 +23,12 @@ public:
 
 	struct Context
 	{
-		Context(sf::RenderWindow& window, TextureHolder& textures, FontHolder& fonts, Player& player, MusicPlayer& music, SoundPlayer& sounds);
+		Context(sf::RenderWindow& window, TextureHolder& textures, FontHolder& fonts, Player& player1, Player& player2, MusicPlayer& music, SoundPlayer& sounds);
 		sf::RenderWindow* window;
 		TextureHolder* textures;
 		FontHolder* fonts;
-		Player* player;
+		Player* player1;
+		Player* player2;
 		MusicPlayer* music;
 		SoundPlayer* sounds;
 	};

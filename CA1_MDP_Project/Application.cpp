@@ -1,3 +1,4 @@
+//Ross - D00241095 | Josh - D00238448
 #include "Application.hpp"
 #include "GameState.hpp"
 #include "TitleState.hpp"
@@ -6,10 +7,12 @@
 #include "SettingsState.hpp"
 #include "GameOverState.hpp"
 
+//Ross - Updated the buttons to our own ones for the game.
+//Test
 const sf::Time Application::kTimePerFrame = sf::seconds(1.f / 60.f);
 
 Application::Application() : m_window(sf::VideoMode(1024, 768), "States", sf::Style::Close)
-, m_stack(State::Context(m_window, m_textures, m_fonts, m_player, m_music, m_sound))
+, m_stack(State::Context(m_window, m_textures, m_fonts, m_player1, m_player2, m_music, m_sound))
 {
 	m_window.setKeyRepeatEnabled(false);
 	m_fonts.Load(Font::kMain, "Media/Fonts/PixeloidSansBold-PKnYd.ttf");

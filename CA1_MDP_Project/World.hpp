@@ -1,3 +1,4 @@
+//Ross - D00241095 | Josh - D00238448
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "ResourceIdentifiers.hpp"
@@ -23,14 +24,19 @@ public:
 
 	CommandQueue& GetCommandQueue();
 
-	bool HasAlivePlayer() const;
-	bool HasPlayerReachedEnd() const;
+	bool HasAlivePlayer1() const;
+	bool HasAlivePlayer2() const;
+	bool HasPlayer1ReachedEnd() const;
+	bool HasPlayer2ReachedEnd() const;
+
 
 private:
 	void LoadTextures();
 	void BuildScene();
-	void AdaptPlayerPosition();
-	void AdaptPlayerVelocity();
+	void AdaptPlayer1Position();
+	void AdaptPlayer2Position();
+	void AdaptPlayer1Velocity();
+	void AdaptPlayer2Velocity();
 
 	void SpawnEnemies();
 	void AddEnemy(AircraftType type, float relx, float rely);
@@ -39,7 +45,8 @@ private:
 
 	void DestroyEntitiesOutsideView();
 	void GuideMissiles();
-	void HandleCollisions();
+	void HandleCollisions1();
+	void HandleCollisions2();
 	void UpdateSounds();
 
 	// Random enemy spawning
@@ -67,7 +74,8 @@ private:
 	sf::FloatRect m_world_bounds;
 	sf::Vector2f m_spawn_position;
 	float m_scrollspeed;
-	Aircraft* m_player_aircraft;
+	Aircraft* m_player_aircraft1;
+	Aircraft* m_player_aircraft2;
 
 	CommandQueue m_command_queue;
 

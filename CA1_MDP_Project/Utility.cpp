@@ -1,3 +1,4 @@
+//Ross - D00241095 | Josh - D00238448
 #define _USE_MATH_DEFINES
 #include "Utility.hpp"
 #include <math.h>
