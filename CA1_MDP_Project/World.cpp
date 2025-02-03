@@ -157,7 +157,7 @@ void World::BuildScene()
 	finish_sprite->setPosition(0.f, -76.f);
 	m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->AttachChild(std::move(finish_sprite));
 
-	//Add the player's aircraft
+	//Add the player's aircraft- changed by Josh added in secondary player functionality 
 	std::unique_ptr<Aircraft> leader(new Aircraft(AircraftType::kBattleShip, m_textures, m_fonts));
 	m_player_aircraft1 = leader.get();
 	m_player_aircraft1->setPosition(m_spawn_position);
@@ -190,7 +190,7 @@ void World::BuildScene()
 	m_player_aircraft1->AttachChild(std::move(right_escort));*/
 }
 
-void World::AdaptPlayer1Position()
+void World::AdaptPlayer1Position() //changed by Josh added in secondary player functionality
 {
 	//keep the player on the screen
 	sf::FloatRect view_bounds(m_camera.getCenter() - m_camera.getSize() / 2.f, m_camera.getSize());
@@ -205,7 +205,7 @@ void World::AdaptPlayer1Position()
 
 
 }
-void World::AdaptPlayer2Position()
+void World::AdaptPlayer2Position() //changed by Josh added in secondary player functionality
 {
 	sf::FloatRect view_bounds(m_camera.getCenter() - m_camera.getSize() / 2.f, m_camera.getSize());
 	const float border_distance = 40.f;
@@ -219,7 +219,7 @@ void World::AdaptPlayer2Position()
 }
 
 
-void World::AdaptPlayer1Velocity()
+void World::AdaptPlayer1Velocity() //changed by Josh added in secondary player functionality
 {
 	sf::Vector2f velocity1 = m_player_aircraft1->GetVelocity();
 
@@ -236,7 +236,7 @@ void World::AdaptPlayer1Velocity()
 
 }
 
-void World::AdaptPlayer2Velocity()
+void World::AdaptPlayer2Velocity() //changed by Josh added in secondary player functionality
 {
 	sf::Vector2f velocity2 = m_player_aircraft2->GetVelocity();
 	//If they are moving diagonally divide by sqrt 2
@@ -391,7 +391,7 @@ bool MatchesCategories(SceneNode::Pair& colliders, ReceiverCategories type1, Rec
 }
 
 
-void World::HandleCollisions1()
+void World::HandleCollisions1() //changed by Josh added in secondary player functionality
 {
 	std::set<SceneNode::Pair> collision_pairs;
 	m_scenegraph.CheckSceneCollision(m_scenegraph, collision_pairs);
@@ -428,7 +428,7 @@ void World::HandleCollisions1()
 }
 
 
-void World::HandleCollisions2()
+void World::HandleCollisions2() //changed by Josh added in secondary player functionality
 {
 	std::set<SceneNode::Pair> collision_pairs;
 	m_scenegraph.CheckSceneCollision(m_scenegraph, collision_pairs);

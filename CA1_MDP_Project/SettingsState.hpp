@@ -21,7 +21,7 @@ public:
 
 private:
 	void UpdateLabels();
-	void AddButtonLabel(Action action, float y, const std::string& text, Context context, bool isPlayer1);
+	void AddButtonLabel(Action action, float y, const std::string& text, Context context, bool isPlayer1); //adjusted to handle 2 player settings
 
 private:
 	sf::Sprite m_background_sprite;

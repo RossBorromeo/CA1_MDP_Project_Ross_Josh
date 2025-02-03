@@ -23,6 +23,7 @@ private:
 
 private:
 	sf::RenderWindow m_window;
+	//added in by Josh to Handle 2 players
 	Player m_player1;
 	Player m_player2;
 

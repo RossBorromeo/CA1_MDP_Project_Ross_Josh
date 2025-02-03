@@ -12,7 +12,7 @@ enum class Action
 	kActionCount,
 
 
-	//P2 Movement
+	//P2 Movement added in by Josh
 
 
 	kMoveLeft1,

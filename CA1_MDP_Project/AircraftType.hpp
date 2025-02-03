@@ -4,6 +4,7 @@
 enum class AircraftType
 {
 	kBattleShip,
+	//added in by Josh to Handle 2 players
 	kBattleShip1,
 	kMeteor,
 	kAvenger,

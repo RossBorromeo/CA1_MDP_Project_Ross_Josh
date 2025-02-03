@@ -38,6 +38,7 @@ private:
 	virtual void DrawCurrent(sf::RenderTarget& target, sf::RenderStates states) const;
 	virtual void UpdateCurrent(sf::Time dt, CommandQueue& commands) override;
 	void CheckProjectileLaunch(sf::Time dt, CommandQueue& commands);
+	//added in by Josh to Handle 2 players
 	bool IsAllied1() const;
 	bool IsAllied2() const;
 	/*void CreatePickup(SceneNode& node, const TextureHolder& textures) const;

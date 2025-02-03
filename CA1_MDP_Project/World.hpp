@@ -24,6 +24,7 @@ public:
 	void Draw();
 
 	CommandQueue& GetCommandQueue();
+	//added in by Josh to Handle 2 players
 
 	bool HasAlivePlayer1() const;
 	bool HasAlivePlayer2() const;
@@ -34,6 +35,8 @@ public:
 private:
 	void LoadTextures();
 	void BuildScene();
+	//added in by Josh to Handle 2 players
+
 	void AdaptPlayer1Position();
 	void AdaptPlayer2Position();
 	void AdaptPlayer1Velocity();
@@ -75,6 +78,8 @@ private:
 	sf::FloatRect m_world_bounds;
 	sf::Vector2f m_spawn_position;
 	float m_scrollspeed;
+	//added in by Josh to Handle 2 players
+
 	Aircraft* m_player_aircraft1;
 	Aircraft* m_player_aircraft2;
 

@@ -27,6 +27,7 @@ Player::Player() : m_current_mission_status(MissionStatus::kMissionRunning)
     m_key_binding[sf::Keyboard::M] = Action::kMissileFire;
     m_key_binding[sf::Keyboard::Space] = Action::kBulletFire;
 
+    //This was added by Josh to get actions for player 2
     m_key_binding[sf::Keyboard::Left] = Action::kMoveLeft1;
     m_key_binding[sf::Keyboard::Right] = Action::kMoveRight1;
     m_key_binding[sf::Keyboard::Up] = Action::kMoveUp1;
@@ -161,6 +162,7 @@ void Player::InitialiseActions()
 
 bool Player::IsRealTimeAction(Action action)
 {
+    //done by Josh to smooth player 2 movement
     switch (action)
     {
     case Action::kMoveLeft:

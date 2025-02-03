@@ -19,7 +19,7 @@ bool GameState::Update(sf::Time dt)
 {
     m_world.Update(dt);
 
-
+    //This was added by Josh to get different Win screens depending on specific scenarios
     if (m_world.HasPlayer1ReachedEnd())
     {
         std::cout << "DEBUG: Player 1 reached the end. Setting success.\n";

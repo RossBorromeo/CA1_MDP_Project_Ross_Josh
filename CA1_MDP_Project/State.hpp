@@ -24,6 +24,8 @@ public:
 
 	struct Context
 	{
+		//added in by Josh to Handle 2 players
+
 		Context(sf::RenderWindow& window, TextureHolder& textures, FontHolder& fonts, Player& player1, Player& player2, MusicPlayer& music, SoundPlayer& sounds);
 		sf::RenderWindow* window;
 		TextureHolder* textures;

@@ -6,6 +6,8 @@ enum class ReceiverCategories
 	kNone = 0,
 	kScene = 1 << 0,
 	kPlayerAircraft1 = 1 << 1,
+	//added in by Josh to Handle 2 players
+
 	kPlayerAircraft2 = 1 << 2,
 	kAlliedAircraft = 1 << 3,
 	kEnemyAircraft = 1 << 4,
