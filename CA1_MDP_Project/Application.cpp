@@ -8,6 +8,7 @@
 #include "GameOverState.hpp"
 
 //Ross - Updated the buttons to our own ones for the game.
+//Test
 const sf::Time Application::kTimePerFrame = sf::seconds(1.f / 60.f);
 
 Application::Application() : m_window(sf::VideoMode(1024, 768), "States", sf::Style::Close)
