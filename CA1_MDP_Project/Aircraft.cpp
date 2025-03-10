@@ -1,4 +1,3 @@
-//Ross - D00241095 | Josh - D00238448
 #include "Aircraft.hpp"
 #include "TextureID.hpp"
 #include "ResourceHolder.hpp"
@@ -8,6 +7,7 @@
 //#include "PickupType.hpp"
 //#include "Pickup.hpp"
 #include "SoundNode.hpp"
+#include "NetworkNode.hpp"
 
 namespace
 {
@@ -48,11 +48,13 @@ Aircraft::Aircraft(AircraftType type, const TextureHolder& textures, const FontH
 	, m_is_firing(false)
 	, m_is_launching_missile(false)
 	, m_fire_countdown(sf::Time::Zero)
-	, m_missile_ammo(0)
+	, m_missile_ammo(2)
 	, m_is_marked_for_removal(false)
 	, m_show_explosion(true)
-	/*, m_spawned_pickup(false)*/
-	, m_played_explosion_sound(false)
+	, m_explosion_began(false)
+	, m_spawned_pickup(false)
+	, m_pickups_enabled(true)
+	, m_identifier(0)
 
 {
 	m_explosion.SetFrameSize(sf::Vector2i(256, 256));
@@ -84,8 +86,8 @@ Aircraft::Aircraft(AircraftType type, const TextureHolder& textures, const FontH
 	m_health_display = health_display.get();
 	AttachChild(std::move(health_display));
 
-	if (Aircraft::GetCategory() == static_cast<int>(ReceiverCategories::kPlayerAircraft1) ||
-		Aircraft::GetCategory() == static_cast<int>(ReceiverCategories::kPlayerAircraft2))
+	if (Aircraft::GetCategory() == static_cast<int>(ReceiverCategories::kPlayerAircraft))
+
 	{
 		std::string* missile_ammo = new std::string("");
 		std::unique_ptr<TextNode> missile_display(new TextNode(fonts, *missile_ammo));
@@ -99,18 +101,24 @@ Aircraft::Aircraft(AircraftType type, const TextureHolder& textures, const FontH
 
 unsigned int Aircraft::GetCategory() const
 {
-	if (IsAllied1())
+	if (IsAllied())
 	{
-		return static_cast<unsigned int>(ReceiverCategories::kPlayerAircraft1);
+		return static_cast<unsigned int>(ReceiverCategories::kPlayerAircraft);
 	}
 
-	if (IsAllied2())
-	{
-		return static_cast<unsigned int>(ReceiverCategories::kPlayerAircraft2);
-	}
 
 	return static_cast<unsigned int>(ReceiverCategories::kEnemyAircraft);
 
+}
+
+int Aircraft::GetMissileAmmo() const
+{
+	return m_missile_ammo;
+}
+
+void Aircraft::SetMissileAmmo(int ammo)
+{
+	m_missile_ammo = ammo;
 }
 
 void Aircraft::IncreaseFireRate()
@@ -204,7 +212,7 @@ void Aircraft::LaunchMissile()
 
 void Aircraft::CreateBullet(SceneNode& node, const TextureHolder& textures) const
 {
-	ProjectileType type = IsAllied1() ? ProjectileType::kAlliedBullet : IsAllied2() ? ProjectileType::kAlliedBullet : ProjectileType::kEnemyBullet;
+	ProjectileType type = IsAllied() ? ProjectileType::kAlliedBullet : ProjectileType::kEnemyBullet;
 	switch (m_spread_level)
 	{
 	case 1:
@@ -229,7 +237,7 @@ void Aircraft::CreateProjectile(SceneNode& node, ProjectileType type, float x_of
 	sf::Vector2f offset(x_offset * m_sprite.getGlobalBounds().width, y_offset * m_sprite.getGlobalBounds().height);
 	sf::Vector2f velocity(0, projectile->GetMaxSpeed());
 
-	float sign = IsAllied1() ? -1.f : (IsAllied2() ? -1.f : 1.f);
+	float sign = IsAllied() ? -1.f : 1.f;
 
 	projectile->setPosition(GetWorldPosition() + offset * sign);
 	projectile->SetVelocity(velocity * sign);
@@ -239,6 +247,16 @@ void Aircraft::CreateProjectile(SceneNode& node, ProjectileType type, float x_of
 sf::FloatRect Aircraft::GetBoundingRect() const
 {
 	return GetWorldTransform().transformRect(m_sprite.getGlobalBounds());
+}
+
+int	Aircraft::GetIdentifier()
+{
+	return m_identifier;
+}
+
+void Aircraft::SetIdentifier(int identifier)
+{
+	m_identifier = identifier;
 }
 
 bool Aircraft::IsMarkedForRemoval() const
@@ -258,6 +276,7 @@ void Aircraft::DrawCurrent(sf::RenderTarget& target, sf::RenderStates states) co
 	}
 }
 
+
 void Aircraft::UpdateCurrent(sf::Time dt, CommandQueue& commands)
 {
 	if (IsDestroyed())
@@ -265,12 +284,26 @@ void Aircraft::UpdateCurrent(sf::Time dt, CommandQueue& commands)
 		/*CheckPickupDrop(commands);*/
 		m_explosion.Update(dt);
 		// Play explosion sound only once
-		if (!m_played_explosion_sound)
+		if (!m_explosion_began)
 		{
 			SoundEffect soundEffect = (Utility::RandomInt(2) == 0) ? SoundEffect::kExplosion1 : SoundEffect::kExplosion2;
 			PlayLocalSound(commands, soundEffect);
 
-			m_played_explosion_sound = true;
+			if (!IsAllied())
+			{
+				sf::Vector2f position = GetWorldPosition();
+
+				Command command;
+				command.category = static_cast<int>(ReceiverCategories::kNetwork);
+				command.action = DerivedAction<NetworkNode>([position](NetworkNode& node, sf::Time)
+					{
+						node.NotifyGameAction(GameActions::kEnemyExplode, position);
+					});
+
+				commands.Push(command);
+			}
+
+			m_explosion_began = true;
 		}
 		return;
 	}
@@ -289,9 +322,7 @@ void Aircraft::CheckProjectileLaunch(sf::Time dt, CommandQueue& commands)
 {
 	if (m_is_firing && m_fire_countdown <= sf::Time::Zero)
 	{
-		if (IsAllied1())
-			PlayLocalSound(commands, SoundEffect::kAlliedGunfire);
-		else if (IsAllied2())
+		if (IsAllied())
 			PlayLocalSound(commands, SoundEffect::kAlliedGunfire);
 		else
 			PlayLocalSound(commands, SoundEffect::kEnemyGunfire);
@@ -319,15 +350,18 @@ void Aircraft::CheckProjectileLaunch(sf::Time dt, CommandQueue& commands)
 }
 
 
-bool Aircraft::IsAllied1() const
+bool Aircraft::IsAllied() const
 {
 	return m_type == AircraftType::kBattleShip;
 }
 
-bool Aircraft::IsAllied2() const
+void Aircraft::Remove()
 {
-	return m_type == AircraftType::kBattleShip1;
+	Entity::Remove();
+	m_show_explosion = false;
 }
+
+
 
 //void Aircraft::CreatePickup(SceneNode& node, const TextureHolder& textures) const
 //{

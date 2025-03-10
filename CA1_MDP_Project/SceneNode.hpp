@@ -1,4 +1,5 @@
-//Ross - D00241095 | Josh - D00238448
+//D00238448:Joshua Thompson
+//d00241095:Ross Borromeo
 #pragma once
 #include <memory>
 #include <SFML/System/NonCopyable.hpp>

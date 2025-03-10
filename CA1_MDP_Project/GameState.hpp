@@ -1,4 +1,5 @@
-//Ross - D00241095 | Josh - D00238448
+//D00238448:Joshua Thompson
+//d00241095:Ross Borromeo
 #pragma once
 #include "State.hpp"
 #include "World.hpp"
@@ -14,7 +15,6 @@ public:
 
 private:
 	World m_world;
-	Player m_player1;
-	Player m_player2;
+	Player m_player;
 };
 
