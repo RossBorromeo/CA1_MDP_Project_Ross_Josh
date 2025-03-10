@@ -1,13 +1,11 @@
-//Ross - D00241095 | Josh - D00238448
 #include "GameOverState.hpp"
 #include "ResourceHolder.hpp"
 #include <SFML/Graphics/RenderWindow.hpp>
 #include "Player.hpp"
 #include "Utility.hpp"
 
-#include <iostream>
 
-GameOverState::GameOverState(StateStack& stack, Context context)
+GameOverState::GameOverState(StateStack& stack, Context context, const std::string& text)
     : State(stack, context)
     , m_game_over_text()
     , m_elapsed_time(sf::Time::Zero)
@@ -16,36 +14,13 @@ GameOverState::GameOverState(StateStack& stack, Context context)
     sf::Vector2f window_size(context.window->getSize());
 
     m_game_over_text.setFont(font);
+    m_game_over_text.setString(text);
 
-
-    MissionStatus player1Status = context.player1->GetMissionStatus();
-    MissionStatus player2Status = context.player2->GetMissionStatus();
-
-    // Debugging output to confirm values
-    std::cout << "DEBUG: GameOverState Loaded - Player 1 Status: " << static_cast<int>(player1Status) << "\n";
-    std::cout << "DEBUG: GameOverState Loaded - Player 2 Status: " << static_cast<int>(player2Status) << "\n";
-
-    if (player1Status == MissionStatus::kMissionSuccess)
-    {
-        m_game_over_text.setString("PLAYER 1 WINS!");
-        m_game_over_text.setFillColor(sf::Color::Green);
-    }
-    else if (player2Status == MissionStatus::kMissionSuccess)
-    {
-        m_game_over_text.setString("PLAYER 2 WINS!");
-        m_game_over_text.setFillColor(sf::Color::Green);
-    }
-    else
-    {
-        m_game_over_text.setString("Mission Failure");
-    }
-
-    m_game_over_text.setCharacterSize(50);
+    m_game_over_text.setCharacterSize(70);
     Utility::CentreOrigin(m_game_over_text);
-    m_game_over_text.setPosition(0.5f * window_size.x, 0.4f * window_size.y);
+    m_game_over_text.setPosition(0.5f * window_size.x, 0.4 * window_size.y);
+
 }
-
-
 
 void GameOverState::Draw()
 {

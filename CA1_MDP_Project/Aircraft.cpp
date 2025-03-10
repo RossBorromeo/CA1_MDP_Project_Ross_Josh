@@ -21,9 +21,6 @@ TextureID ToTextureID(AircraftType type)
 	case AircraftType::kBattleShip:
 		return TextureID::kBattleShip;
 		break;
-	case AircraftType::kBattleShip1:
-		return TextureID::kBattleShip1;
-		break;
 	case AircraftType::kMeteor:
 		return TextureID::kMeteor;
 		break;
@@ -52,8 +49,8 @@ Aircraft::Aircraft(AircraftType type, const TextureHolder& textures, const FontH
 	, m_is_marked_for_removal(false)
 	, m_show_explosion(true)
 	, m_explosion_began(false)
-	, m_spawned_pickup(false)
-	, m_pickups_enabled(true)
+	/*, m_spawned_pickup(false)
+	, m_pickups_enabled(true)*/
 	, m_identifier(0)
 
 {
@@ -318,26 +315,26 @@ void Aircraft::UpdateCurrent(sf::Time dt, CommandQueue& commands)
 	CheckProjectileLaunch(dt, commands);
 }
 
+
 void Aircraft::CheckProjectileLaunch(sf::Time dt, CommandQueue& commands)
 {
+	if (!IsAllied())
+	{
+		Fire();
+	}
+
 	if (m_is_firing && m_fire_countdown <= sf::Time::Zero)
 	{
-		if (IsAllied())
-			PlayLocalSound(commands, SoundEffect::kAlliedGunfire);
-		else
-			PlayLocalSound(commands, SoundEffect::kEnemyGunfire);
-
+		PlayLocalSound(commands, IsAllied() ? SoundEffect::kEnemyGunfire : SoundEffect::kAlliedGunfire);
 		commands.Push(m_fire_command);
 		m_fire_countdown += Table[static_cast<int>(m_type)].m_fire_interval / (m_fire_rate + 1.f);
-
-		// Only reset `m_is_firing` if it's supposed to fire once per press
-		// If you want continuous fire when holding down the button, remove this.
 		m_is_firing = false;
 	}
 	else if (m_fire_countdown > sf::Time::Zero)
 	{
 		//Wait, can't fire
 		m_fire_countdown -= dt;
+		m_is_firing = false;
 	}
 
 	//Missile launch

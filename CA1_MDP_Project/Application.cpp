@@ -9,15 +9,14 @@
 
 const sf::Time Application::kTimePerFrame = sf::seconds(1.f / 60.f);
 
-Application::Application() : m_window(sf::VideoMode(1024, 768), "Networked", sf::Style::Close)
-, m_stack(State::Context(m_window, m_textures, m_fonts, m_player1, m_player2, m_music, m_sound))
+Application::Application()
+	: m_window(sf::VideoMode(1024, 768), "Networked", sf::Style::Close)
+	, m_key_binding_1(1), m_key_binding_2(2)
+	, m_stack(State::Context(m_window, m_textures, m_fonts, m_music, m_sound, m_key_binding_1, m_key_binding_2))
 {
 	m_window.setKeyRepeatEnabled(false);
-	m_fonts.Load(Font::kMain, "Media/Fonts/PixeloidSansBold-PKnYd.ttf");
+	m_fonts.Load(Font::kMain, "Media/Fonts/Sansation.ttf");
 	m_textures.Load(TextureID::kTitleScreen, "Media/Textures/TitleScreen.png");
-	m_textures.Load(TextureID::kButtonNormal, "Media/Textures/ButtonNormal.png");
-	m_textures.Load(TextureID::kButtonSelected, "Media/Textures/ButtonSelected.png");
-	m_textures.Load(TextureID::kButtonActivated, "Media/Textures/ButtonPressed.png");
 	m_textures.Load(TextureID::kButtons, "Media/Textures/Buttons.png");
 
 	RegisterStates();
