@@ -25,9 +25,9 @@ public:
 
 	struct Context
 	{
-		//added in by Josh to Handle 2 players
+		
 
-		Context(sf::RenderWindow& window, TextureHolder& textures, FontHolder& fonts, Player& player1, Player& player2, MusicPlayer& music, SoundPlayer& sounds);
+		Context(sf::RenderWindow& window, TextureHolder& textures, FontHolder& fonts, MusicPlayer& music, SoundPlayer& sounds, KeyBinding& keys1, KeyBinding& keys2);
 		sf::RenderWindow* window;
 		TextureHolder* textures;
 		FontHolder* fonts;
@@ -45,6 +45,8 @@ public:
 	virtual void Draw() = 0;
 	virtual bool Update(sf::Time dt) = 0;
 	virtual bool HandleEvent(const sf::Event& event) = 0;
+	virtual void OnActivate();
+	virtual void OnDestroy();
 
 
 protected:
@@ -58,4 +60,3 @@ private:
 	StateStack* m_stack;
 	Context m_context;
 };
-

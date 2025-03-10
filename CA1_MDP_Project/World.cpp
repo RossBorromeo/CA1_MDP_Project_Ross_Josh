@@ -33,6 +33,11 @@ World::World(sf::RenderTarget& output_target, FontHolder& font, SoundPlayer& sou
 	m_camera.setCenter(m_spawn_position);
 }
 
+void World::SetWorldScrollCompensation(float compensation)
+{
+	m_scrollspeed_compensation = compensation;
+}
+
 void World::Update(sf::Time dt)
 {
 	// Scroll the world
@@ -66,7 +71,7 @@ void World::Update(sf::Time dt)
 
 	m_scenegraph.Update(dt, m_command_queue);
 	AdaptPlayerPosition();
-
+	UpdateSounds();
 }
 
 void World::Draw()
@@ -191,7 +196,6 @@ bool World::HasPlayerReachedEnd() const
 void World::LoadTextures()
 {
 	m_textures.Load(TextureID::kBattleShip, "Media/Textures/BattleShip.png");
-	m_textures.Load(TextureID::kBattleShip1, "Media/Textures/BattleShip1.png");
 	m_textures.Load(TextureID::kMeteor, "Media/Textures/Asteroid.png");
 	m_textures.Load(TextureID::kAvenger, "Media/Textures/Meteor.png");
 	m_textures.Load(TextureID::kLandscape, "Media/Textures/Space.png");
@@ -237,6 +241,7 @@ void World::BuildScene()
 	sf::Texture& finish_texture = m_textures.Get(TextureID::kFinishLine);
 	std::unique_ptr<SpriteNode> finish_sprite(new SpriteNode(finish_texture));
 	finish_sprite->setPosition(0.f, -76.f);
+	m_finish_sprite = finish_sprite.get();
 	m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->AttachChild(std::move(finish_sprite));
 
 	//Add the particle nodes to the scene
@@ -359,7 +364,7 @@ sf::FloatRect World::GetViewBounds() const
 	return sf::FloatRect(m_camera.getCenter() - m_camera.getSize() / 2.f, m_camera.getSize());
 }
 
-sf::FloatRect World::GetBattleFieldBounds() const
+sf::FloatRect World::GetBattlefieldBounds() const
 {
 	//Return camera bounds + a small area at the top where enemies spawn
 	sf::FloatRect bounds = GetViewBounds();
@@ -377,7 +382,7 @@ void World::DestroyEntitiesOutsideView()
 	command.action = DerivedAction<Entity>([this](Entity& e, sf::Time dt)
 		{
 			// Give enemies some buffer before removing them
-			sf::FloatRect battlefield_bounds = GetBattleFieldBounds();
+			sf::FloatRect battlefield_bounds = GetBattlefieldBounds();
 			battlefield_bounds.top -= 100.f;  // Allow some buffer before removing enemies
 			battlefield_bounds.height += 200.f;
 
@@ -455,7 +460,7 @@ bool MatchesCategories(SceneNode::Pair& colliders, ReceiverCategories type1, Rec
 }
 
 
-void World::HandleCollisions() //changed by Josh added in secondary player functionality
+void World::HandleCollisions()
 {
 	std::set<SceneNode::Pair> collision_pairs;
 	m_scenegraph.CheckSceneCollision(m_scenegraph, collision_pairs);
@@ -465,22 +470,22 @@ void World::HandleCollisions() //changed by Josh added in secondary player funct
 		{
 			auto& player = static_cast<Aircraft&>(*pair.first);
 			auto& enemy = static_cast<Aircraft&>(*pair.second);
-
-
-
-			// Reduce damage 
-			player.Damage(5);
-
-			// Move Player 1 back to the bottom of the screen
-			player.setPosition(m_spawn_position);
-
-
-
+			//Collision response
+			player.Damage(enemy.GetHitPoints());
 			enemy.Destroy();
 		}
 
+		else if (MatchesCategories(pair, ReceiverCategories::kPlayerAircraft, ReceiverCategories::kEnemyProjectile) || MatchesCategories(pair, ReceiverCategories::kEnemyAircraft, ReceiverCategories::kAlliedProjectile))
+		{
+			auto& aircraft = static_cast<Aircraft&>(*pair.first);
+			auto& projectile = static_cast<Projectile&>(*pair.second);
+			//Collision response
+			aircraft.Damage(projectile.GetDamage());
+			projectile.Destroy();
+		}
 	}
 }
+
 
 
 

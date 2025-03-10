@@ -12,21 +12,28 @@
 #include "CommandQueue.hpp"
 #include "BloomEffect.hpp"
 #include "SoundPlayer.hpp"
-#include "NetworkNode.hpp"
 
 #include <array>
-#include <random>
+#include "PickupType.hpp"
+#include "NetworkNode.hpp"
 
 class World : private sf::NonCopyable
 {
 public:
-	explicit World(sf::RenderTarget& target, FontHolder& font, SoundPlayer& sounds, bool networked);
+	explicit World(sf::RenderTarget& target, FontHolder& font, SoundPlayer& sounds, bool networked = false);
 	void Update(sf::Time dt);
 	void Draw();
 
 	sf::FloatRect GetViewBounds() const;
 	CommandQueue& GetCommandQueue();
-	//added in by Josh to Handle 2 players
+
+	Aircraft* AddAircraft(int identifier);
+	void RemoveAircraft(int identifier);
+	void SetCurrentBattleFieldPosition(float line_y);
+	void SetWorldHeight(float height);
+
+	void AddEnemy(AircraftType type, float relx, float rely);
+	void SortEnemies();
 
 	bool HasAlivePlayer() const;
 	bool HasPlayerReachedEnd() const;
@@ -34,45 +41,31 @@ public:
 	void SetWorldScrollCompensation(float compensation);
 	Aircraft* GetAircraft(int identifier) const;
 	sf::FloatRect GetBattlefieldBounds() const;
-	Aircraft* AddAircraft(int identifier);
-	void RemoveAircraft(int identifier);
-	void SetCurrentBattleFieldPosition(float line_y);
-	void SetWorldHeight(float height);
-	void AddEnemy(AircraftType type, float relx, float rely);
-	void SortEnemies();
 	bool PollGameAction(GameActions::Action& out);
-	//void CreatePickup(sf::Vector2f position, PickupType type);
-
-
 
 private:
 	void LoadTextures();
 	void BuildScene();
-	//added in by Josh to Handle 2 players
-
 	void AdaptPlayerPosition();
 	void AdaptPlayerVelocity();
 
-
-	void SpawnEnemies();
+	void GenerateRandomEnemy();
 	void AddEnemies();
-
-	sf::FloatRect GetViewBounds() const;
-	sf::FloatRect GetBattleFieldBounds() const;
 
 	void DestroyEntitiesOutsideView();
 	void GuideMissiles();
+
 	void HandleCollisions();
 	void UpdateSounds();
 
-	// Random enemy spawning
-	void GenerateRandomEnemy();
 
 private:
 	struct SpawnPoint
 	{
-		SpawnPoint(AircraftType type, float x, float y) : m_type(type), m_x(x), m_y(y) {}
+		SpawnPoint(AircraftType type, float x, float y) :m_type(type), m_x(x), m_y(y)
+		{
 
+		}
 		AircraftType m_type;
 		float m_x;
 		float m_y;
@@ -91,21 +84,18 @@ private:
 	sf::Vector2f m_spawn_position;
 	float m_scrollspeed;
 	float m_scrollspeed_compensation;
-	//added in by Josh to Handle 2 players
 
 	std::vector<Aircraft*> m_player_aircraft;
 
 	CommandQueue m_command_queue;
 
-	std::vector<Aircraft*> m_active_enemies;
 	std::vector<SpawnPoint> m_enemy_spawn_points;
+	std::vector<Aircraft*> m_active_enemies;
 
 	BloomEffect m_bloom_effect;
 	bool m_networked_world;
 	NetworkNode* m_network_node;
 	SpriteNode* m_finish_sprite;
-
-
 
 	// Random number generation
 	std::random_device m_rd;
