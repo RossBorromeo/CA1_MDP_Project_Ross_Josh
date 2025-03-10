@@ -1,4 +1,5 @@
-//Ross - D00241095 | Josh - D00238448
+//D00238448:Joshua Thompson
+//d00241095:Ross Borromeo
 #pragma once
 #include <SFML/Graphics/RenderWindow.hpp>
 #include "Player.hpp"
@@ -22,6 +23,7 @@ private:
 
 private:
 	sf::RenderWindow m_window;
+	//added in by Josh to Handle 2 players
 	Player m_player1;
 	Player m_player2;
 

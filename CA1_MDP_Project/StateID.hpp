@@ -1,4 +1,5 @@
-//Ross - D00241095 | Josh - D00238448
+//D00238448:Joshua Thompson
+//d00241095:Ross Borromeo
 #pragma once
 enum class StateID
 {
@@ -9,4 +10,8 @@ enum class StateID
 	kPause,
 	kSettings,
 	kGameOver,
+	kNetworkPause,
+	kMissionSuccess,
+	kHostGame,
+	kJoinGame
 };

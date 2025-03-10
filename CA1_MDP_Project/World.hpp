@@ -1,4 +1,5 @@
-//Ross - D00241095 | Josh - D00238448
+//D00238448:Joshua Thompson
+//d00241095:Ross Borromeo
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "ResourceIdentifiers.hpp"
@@ -11,6 +12,7 @@
 #include "CommandQueue.hpp"
 #include "BloomEffect.hpp"
 #include "SoundPlayer.hpp"
+#include "NetworkNode.hpp"
 
 #include <array>
 #include <random>
@@ -18,35 +20,49 @@
 class World : private sf::NonCopyable
 {
 public:
-	explicit World(sf::RenderTarget& target, FontHolder& font, SoundPlayer& sounds);
+	explicit World(sf::RenderTarget& target, FontHolder& font, SoundPlayer& sounds, bool networked);
 	void Update(sf::Time dt);
 	void Draw();
 
+	sf::FloatRect GetViewBounds() const;
 	CommandQueue& GetCommandQueue();
+	//added in by Josh to Handle 2 players
 
-	bool HasAlivePlayer1() const;
-	bool HasAlivePlayer2() const;
-	bool HasPlayer1ReachedEnd() const;
-	bool HasPlayer2ReachedEnd() const;
+	bool HasAlivePlayer() const;
+	bool HasPlayerReachedEnd() const;
+
+	void SetWorldScrollCompensation(float compensation);
+	Aircraft* GetAircraft(int identifier) const;
+	sf::FloatRect GetBattlefieldBounds() const;
+	Aircraft* AddAircraft(int identifier);
+	void RemoveAircraft(int identifier);
+	void SetCurrentBattleFieldPosition(float line_y);
+	void SetWorldHeight(float height);
+	void AddEnemy(AircraftType type, float relx, float rely);
+	void SortEnemies();
+	bool PollGameAction(GameActions::Action& out);
+	//void CreatePickup(sf::Vector2f position, PickupType type);
+
 
 
 private:
 	void LoadTextures();
 	void BuildScene();
-	void AdaptPlayer1Position();
-	void AdaptPlayer2Position();
-	void AdaptPlayer1Velocity();
-	void AdaptPlayer2Velocity();
+	//added in by Josh to Handle 2 players
+
+	void AdaptPlayerPosition();
+	void AdaptPlayerVelocity();
+
 
 	void SpawnEnemies();
-	void AddEnemy(AircraftType type, float relx, float rely);
+	void AddEnemies();
+
 	sf::FloatRect GetViewBounds() const;
 	sf::FloatRect GetBattleFieldBounds() const;
 
 	void DestroyEntitiesOutsideView();
 	void GuideMissiles();
-	void HandleCollisions1();
-	void HandleCollisions2();
+	void HandleCollisions();
 	void UpdateSounds();
 
 	// Random enemy spawning
@@ -74,14 +90,22 @@ private:
 	sf::FloatRect m_world_bounds;
 	sf::Vector2f m_spawn_position;
 	float m_scrollspeed;
-	Aircraft* m_player_aircraft1;
-	Aircraft* m_player_aircraft2;
+	float m_scrollspeed_compensation;
+	//added in by Josh to Handle 2 players
+
+	std::vector<Aircraft*> m_player_aircraft;
 
 	CommandQueue m_command_queue;
 
 	std::vector<Aircraft*> m_active_enemies;
+	std::vector<SpawnPoint> m_enemy_spawn_points;
 
 	BloomEffect m_bloom_effect;
+	bool m_networked_world;
+	NetworkNode* m_network_node;
+	SpriteNode* m_finish_sprite;
+
+
 
 	// Random number generation
 	std::random_device m_rd;
