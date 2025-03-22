@@ -8,6 +8,7 @@ class PauseState : public State
 {
 public:
 	PauseState(StateStack& stack, Context context);
+	PauseState(StateStack& stack, Context context, bool isNetworked);
 	~PauseState();
 	virtual void Draw() override;
 	virtual bool Update(sf::Time dt) override;

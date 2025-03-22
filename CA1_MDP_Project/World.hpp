@@ -33,6 +33,7 @@ public:
 	void SetWorldHeight(float height);
 
 	void AddEnemy(AircraftType type, float relx, float rely);
+	void SpawnEnemies();
 	void SortEnemies();
 
 	bool HasAlivePlayer() const;

@@ -37,6 +37,16 @@ PauseState::PauseState(StateStack& stack, Context context)
     GetContext().music->SetPaused(true);
 }
 
+PauseState::PauseState(StateStack& stack, Context context, bool isNetworked)
+    : State(stack, context)
+    , m_background_sprite()
+    , m_paused_text()
+    , m_instruction_text()
+    , m_esc_text()
+{
+    // You can use `isNetworked` to modify behavior
+}
+
 void PauseState::Draw()
 {
     sf::RenderWindow& window = *GetContext().window;

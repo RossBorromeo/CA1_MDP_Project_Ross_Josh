@@ -67,7 +67,7 @@ void World::Update(sf::Time dt)
 	m_scenegraph.RemoveWrecks();
 
 	// Randomly spawn new enemies
-	GenerateRandomEnemy();
+	SpawnEnemies();
 
 	m_scenegraph.Update(dt, m_command_queue);
 	AdaptPlayerPosition();
@@ -166,24 +166,13 @@ void World::SetWorldHeight(float height)
 	m_world_bounds.height = height;
 }
 
-CommandQueue& World::GetCommandQueue()
-{
-	return m_command_queue;
-}
 
-bool World::HasAlivePlayer() const
-{
-	return !m_player_aircraft.empty();
-}
 
-bool World::HasPlayerReachedEnd() const
-{
-	if (Aircraft* aircraft = GetAircraft(1))
-	{
-		return !m_world_bounds.contains(aircraft->getPosition());
-	}
-	return false;
-}
+
+
+
+
+
 
 //void World::CreatePickup(sf::Vector2f position, PickupType type)
 //{
@@ -312,12 +301,9 @@ void World::AdaptPlayerVelocity() //changed by Josh added in secondary player fu
 
 }
 
-sf::FloatRect World::GetViewBounds() const
-{
-	return sf::FloatRect(m_camera.getCenter() - m_camera.getSize() / 2.f, m_camera.getSize());
-}
 
-void World::GenerateRandomEnemy()
+
+/*void World::GenerateRandomEnemy()
 {
 	static sf::Clock spawn_timer;
 	sf::Time spawn_interval = sf::seconds(0.45f); // Spawn every .45 seconds
@@ -357,7 +343,7 @@ void World::GenerateRandomEnemy()
 
 		spawn_timer.restart();
 	}
-}
+}*/
 
 sf::FloatRect World::GetViewBounds() const
 {
@@ -373,6 +359,76 @@ sf::FloatRect World::GetBattlefieldBounds() const
 
 	return bounds;
 
+}
+
+void World::SpawnEnemies()
+{
+	//Spawn an enemy when it is relevant i.e when it is in the Battlefieldboudns
+	while (!m_enemy_spawn_points.empty() && m_enemy_spawn_points.back().m_y > GetBattlefieldBounds().top)
+	{
+		SpawnPoint spawn = m_enemy_spawn_points.back();
+		std::unique_ptr<Aircraft> enemy(new Aircraft(spawn.m_type, m_textures, m_fonts));
+		enemy->setPosition(spawn.m_x, spawn.m_y);
+		enemy->setRotation(180.f);
+
+		//If the game is networked the server is responsible for spawning pickups
+
+
+		m_scene_layers[static_cast<int>(SceneLayers::kUpperAir)]->AttachChild(std::move(enemy));
+		m_enemy_spawn_points.pop_back();
+	}
+}
+
+void World::AddEnemy(AircraftType type, float relx, float rely)
+{
+	SpawnPoint spawn(type, m_spawn_position.x + relx, m_spawn_position.y - rely);
+	m_enemy_spawn_points.emplace_back(spawn);
+}
+
+void World::AddEnemies()
+{
+	if (m_networked_world)
+	{
+		return;
+	}
+	//Add all emenies
+	AddEnemy(AircraftType::kMeteor, 0.f, 500.f);
+	AddEnemy(AircraftType::kMeteor, 0.f, 1000.f);
+	AddEnemy(AircraftType::kMeteor, +100.f, 1150.f);
+	AddEnemy(AircraftType::kMeteor, -100.f, 1150.f);
+	AddEnemy(AircraftType::kAvenger, 70.f, 1500.f);
+	AddEnemy(AircraftType::kAvenger, -70.f, 1500.f);
+	AddEnemy(AircraftType::kAvenger, -70.f, 1710.f);
+	AddEnemy(AircraftType::kAvenger, 70.f, 1700.f);
+	AddEnemy(AircraftType::kAvenger, 30.f, 1850.f);
+	AddEnemy(AircraftType::kMeteor, 300.f, 2200.f);
+	AddEnemy(AircraftType::kMeteor, -300.f, 2200.f);
+	AddEnemy(AircraftType::kMeteor, 0.f, 2200.f);
+	AddEnemy(AircraftType::kMeteor, 0.f, 2500.f);
+	AddEnemy(AircraftType::kAvenger, -300.f, 2700.f);
+	AddEnemy(AircraftType::kAvenger, -300.f, 2700.f);
+	AddEnemy(AircraftType::kMeteor, 0.f, 3000.f);
+	AddEnemy(AircraftType::kMeteor, 250.f, 3250.f);
+	AddEnemy(AircraftType::kMeteor, -250.f, 3250.f);
+	AddEnemy(AircraftType::kAvenger, 0.f, 3500.f);
+	AddEnemy(AircraftType::kAvenger, 0.f, 3700.f);
+	AddEnemy(AircraftType::kMeteor, 0.f, 3800.f);
+	AddEnemy(AircraftType::kAvenger, 0.f, 4000.f);
+	AddEnemy(AircraftType::kAvenger, -200.f, 4200.f);
+	AddEnemy(AircraftType::kMeteor, 200.f, 4200.f);
+	AddEnemy(AircraftType::kMeteor, 0.f, 4400.f);
+
+	//Sort according to y value so that lower enemies are checked first
+	SortEnemies();
+}
+
+void World::SortEnemies()
+{
+	//Sort all enemies according to their y-value, such that lower enemies are checked first for spawning
+	std::sort(m_enemy_spawn_points.begin(), m_enemy_spawn_points.end(), [](SpawnPoint lhs, SpawnPoint rhs)
+		{
+			return lhs.m_y < rhs.m_y;
+		});
 }
 
 void World::DestroyEntitiesOutsideView()
