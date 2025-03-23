@@ -524,27 +524,43 @@ void World::HandleCollisions()
 {
 	std::set<SceneNode::Pair> collision_pairs;
 	m_scenegraph.CheckSceneCollision(m_scenegraph, collision_pairs);
+
 	for (SceneNode::Pair pair : collision_pairs)
 	{
+		// Player collides with enemy
 		if (MatchesCategories(pair, ReceiverCategories::kPlayerAircraft, ReceiverCategories::kEnemyAircraft))
 		{
 			auto& player = static_cast<Aircraft&>(*pair.first);
 			auto& enemy = static_cast<Aircraft&>(*pair.second);
-			//Collision response
+
+			// Collision response
 			player.Damage(enemy.GetHitPoints());
 			enemy.Destroy();
+
+			//  Move player to bottom center of screen
+			sf::Vector2f camera_center = m_camera.getCenter();
+			sf::Vector2f camera_size = m_camera.getSize();
+
+			sf::Vector2f new_position;
+			new_position.x = camera_center.x;
+			new_position.y = camera_center.y + camera_size.y / 2.f - 50.f; // 50 px above bottom
+
+			player.setPosition(new_position);
 		}
 
-		else if (MatchesCategories(pair, ReceiverCategories::kPlayerAircraft, ReceiverCategories::kEnemyProjectile) || MatchesCategories(pair, ReceiverCategories::kEnemyAircraft, ReceiverCategories::kAlliedProjectile))
+		// Player hit by projectile OR enemy hit by player's projectile
+		else if (MatchesCategories(pair, ReceiverCategories::kPlayerAircraft, ReceiverCategories::kEnemyProjectile) ||
+			MatchesCategories(pair, ReceiverCategories::kEnemyAircraft, ReceiverCategories::kAlliedProjectile))
 		{
 			auto& aircraft = static_cast<Aircraft&>(*pair.first);
 			auto& projectile = static_cast<Projectile&>(*pair.second);
-			//Collision response
+
 			aircraft.Damage(projectile.GetDamage());
 			projectile.Destroy();
 		}
 	}
 }
+
 
 void World::UpdateSounds()
 {
