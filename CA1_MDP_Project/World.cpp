@@ -26,6 +26,9 @@ World::World(sf::RenderTarget& output_target, FontHolder& font, SoundPlayer& sou
 	, m_networked_world(networked)
 	, m_network_node(nullptr)
 	, m_finish_sprite(nullptr)
+	, m_spawn_timer()
+	, m_spawn_interval()
+
 {
 	m_scene_texture.create(m_target.getSize().x, m_target.getSize().y);
 	LoadTextures();
@@ -40,6 +43,16 @@ void World::SetWorldScrollCompensation(float compensation)
 
 void World::Update(sf::Time dt)
 {
+
+	m_spawn_timer += dt;
+	if (m_spawn_timer >= m_spawn_interval)
+	{
+		SpawnRandomEnemy();
+		m_spawn_timer = sf::Time::Zero; // Reset timer
+	}
+
+	SpawnEnemies();
+
 	// Scroll the world
 	m_camera.move(0, m_scrollspeed * dt.asSeconds());
 
@@ -301,49 +314,73 @@ void World::AdaptPlayerVelocity() //changed by Josh added in secondary player fu
 
 }
 
-
-
-/*void World::GenerateRandomEnemy()
+void World::SpawnRandomEnemy()
 {
-	static sf::Clock spawn_timer;
-	sf::Time spawn_interval = sf::seconds(0.45f); // Spawn every .45 seconds
-
-	if (spawn_timer.getElapsedTime() >= spawn_interval)
+	if (m_networked_world)
 	{
-		float screen_width = m_target.getSize().x;
-		float screen_height = m_target.getSize().y;
-
-		// Ensure enemies spawn inside the screen width
-		float min_x = 50.f;
-		float max_x = screen_width - 50.f;
-
-		// Instead of spawning deep below, spawn slightly above the player
-		float min_y = m_camera.getCenter().y - screen_height / 2.f - 100.f; // Above screen
-		float max_y = m_camera.getCenter().y - screen_height / 2.f - 50.f; // Not too far
-
-		std::uniform_real_distribution<float> x_distribution(min_x, max_x);
-		std::uniform_real_distribution<float> y_distribution(min_y, max_y);
-
-		std::vector<AircraftType> enemy_types = { AircraftType::kMeteor };
-		std::uniform_int_distribution<int> type_distribution(0, enemy_types.size() - 1);
-		AircraftType type = enemy_types[type_distribution(m_rng)];
-
-		float x = x_distribution(m_rng);
-		float y = y_distribution(m_rng);
-
-		std::cout << "Enemy spawned at: " << x << ", " << y << std::endl; // Debug print
-
-		// Create enemy
-		std::unique_ptr<Aircraft> enemy = std::make_unique<Aircraft>(type, m_textures, m_fonts);
-		enemy->setPosition(x, y);
-		enemy->setRotation(180.f); // Face downward
-
-		// Add to scene graph
-		m_scene_layers[static_cast<int>(SceneLayers::kUpperAir)]->AttachChild(std::move(enemy));
-
-		spawn_timer.restart();
+		return;
 	}
-}*/
+
+	static std::random_device rd;
+	static std::mt19937 gen(rd());
+	static std::uniform_real_distribution<float> x_dist(-150.f, 150.f); // Spawn closer to player
+	static std::uniform_real_distribution<float> y_dist(400.f, 1000.f); // Ensure enemies spawn ahead
+	static std::uniform_int_distribution<int> type_dist(0, 1); // Random enemy type
+	static std::uniform_real_distribution<float> interval_dist(0.5f, 1.5f); // Faster spawn rate
+
+	// Choose random enemy type
+	AircraftType type = (type_dist(gen) == 0) ? AircraftType::kMeteor : AircraftType::kAvenger;
+	float rel_x = m_player_aircraft.front()->getPosition().x + x_dist(gen); // Center around player
+	float rel_y = m_player_aircraft.front()->getPosition().y - y_dist(gen); // Always ahead
+
+	AddEnemy(type, rel_x, rel_y);
+
+	// Randomize next spawn interval
+	m_spawn_interval = sf::seconds(interval_dist(gen));
+}
+
+
+//void World::GenerateRandomEnemy()
+//{
+//	static sf::Clock spawn_timer;
+//	sf::Time spawn_interval = sf::seconds(0.45f); // Spawn every .45 seconds
+//
+//	if (spawn_timer.getElapsedTime() >= spawn_interval)
+//	{
+//		float screen_width = m_target.getSize().x;
+//		float screen_height = m_target.getSize().y;
+//
+//		// Ensure enemies spawn inside the screen width
+//		float min_x = 50.f;
+//		float max_x = screen_width - 50.f;
+//
+//		// Instead of spawning deep below, spawn slightly above the player
+//		float min_y = m_camera.getCenter().y - screen_height / 2.f - 100.f; // Above screen
+//		float max_y = m_camera.getCenter().y - screen_height / 2.f - 50.f; // Not too far
+//
+//		std::uniform_real_distribution<float> x_distribution(min_x, max_x);
+//		std::uniform_real_distribution<float> y_distribution(min_y, max_y);
+//
+//		std::vector<AircraftType> enemy_types = { AircraftType::kMeteor };
+//		std::uniform_int_distribution<int> type_distribution(0, enemy_types.size() - 1);
+//		AircraftType type = enemy_types[type_distribution(m_rng)];
+//
+//		float x = x_distribution(m_rng);
+//		float y = y_distribution(m_rng);
+//
+//		std::cout << "Enemy spawned at: " << x << ", " << y << std::endl; // Debug print
+//
+//		// Create enemy
+//		std::unique_ptr<Aircraft> enemy = std::make_unique<Aircraft>(type, m_textures, m_fonts);
+//		enemy->setPosition(x, y);
+//		enemy->setRotation(180.f); // Face downward
+//
+//		// Add to scene graph
+//		m_scene_layers[static_cast<int>(SceneLayers::kUpperAir)]->AttachChild(std::move(enemy));
+//
+//		spawn_timer.restart();
+//	}
+//}
 
 sf::FloatRect World::GetViewBounds() const
 {
@@ -363,16 +400,17 @@ sf::FloatRect World::GetBattlefieldBounds() const
 
 void World::SpawnEnemies()
 {
-	//Spawn an enemy when it is relevant i.e when it is in the Battlefieldboudns
+	if (m_networked_world)
+	{
+		return;
+	}
+
 	while (!m_enemy_spawn_points.empty() && m_enemy_spawn_points.back().m_y > GetBattlefieldBounds().top)
 	{
 		SpawnPoint spawn = m_enemy_spawn_points.back();
 		std::unique_ptr<Aircraft> enemy(new Aircraft(spawn.m_type, m_textures, m_fonts));
 		enemy->setPosition(spawn.m_x, spawn.m_y);
 		enemy->setRotation(180.f);
-
-		//If the game is networked the server is responsible for spawning pickups
-
 
 		m_scene_layers[static_cast<int>(SceneLayers::kUpperAir)]->AttachChild(std::move(enemy));
 		m_enemy_spawn_points.pop_back();
