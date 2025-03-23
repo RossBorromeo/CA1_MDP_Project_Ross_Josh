@@ -50,9 +50,9 @@ private:
 	void AdaptPlayerPosition();
 	void AdaptPlayerVelocity();
 
-	void SpawnRandomEnemy();
+	//void SpawnRandomEnemy();
 
-	//void GenerateRandomEnemy();
+	void GenerateRandomEnemy();
 	void AddEnemies();
 
 	void DestroyEntitiesOutsideView();
@@ -109,3 +109,4 @@ private:
 	std::uniform_real_distribution<float> m_y_distribution;
 	std::uniform_int_distribution<int> m_type_distribution;
 };
+
