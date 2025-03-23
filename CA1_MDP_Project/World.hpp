@@ -50,7 +50,9 @@ private:
 	void AdaptPlayerPosition();
 	void AdaptPlayerVelocity();
 
-	void GenerateRandomEnemy();
+	void SpawnRandomEnemy();
+
+	//void GenerateRandomEnemy();
 	void AddEnemies();
 
 	void DestroyEntitiesOutsideView();
@@ -85,6 +87,8 @@ private:
 	sf::Vector2f m_spawn_position;
 	float m_scrollspeed;
 	float m_scrollspeed_compensation;
+	sf::Time m_spawn_timer;
+	sf::Time m_spawn_interval;
 
 	std::vector<Aircraft*> m_player_aircraft;
 
