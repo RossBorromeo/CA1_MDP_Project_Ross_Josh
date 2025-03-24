@@ -50,7 +50,7 @@ std::vector<AircraftData> InitializeAircraftData()
 std::vector<ProjectileData> InitializeProjectileData()
 {
     std::vector<ProjectileData> data(static_cast<int>(ProjectileType::kProjectileCount));
-    data[static_cast<int>(ProjectileType::kAlliedBullet)].m_damage = 10;
+    data[static_cast<int>(ProjectileType::kAlliedBullet)].m_damage = 25;
     data[static_cast<int>(ProjectileType::kAlliedBullet)].m_speed = 300;
     data[static_cast<int>(ProjectileType::kAlliedBullet)].m_texture = TextureID::kEntities;
     data[static_cast<int>(ProjectileType::kAlliedBullet)].m_texture_rect = sf::IntRect(175, 64, 3, 14);

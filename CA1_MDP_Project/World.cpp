@@ -533,29 +533,39 @@ void World::HandleCollisions()
 			auto& player = static_cast<Aircraft&>(*pair.first);
 			auto& enemy = static_cast<Aircraft&>(*pair.second);
 
-			// Collision response
-			player.Damage(enemy.GetHitPoints());
+			if (!player.IsInvincible())
+			{
+				player.Damage(10);
+				player.StartInvincibility();
+
+				sf::Vector2f camera_center = m_camera.getCenter();
+				sf::Vector2f camera_size = m_camera.getSize();
+
+				sf::Vector2f new_position;
+				new_position.x = camera_center.x;
+				new_position.y = camera_center.y + camera_size.y / 2.f - 250.f;
+
+				player.setPosition(new_position);
+			}
+
 			enemy.Destroy();
-
-			//  Move player to bottom center of screen
-			sf::Vector2f camera_center = m_camera.getCenter();
-			sf::Vector2f camera_size = m_camera.getSize();
-
-			sf::Vector2f new_position;
-			new_position.x = camera_center.x;
-			new_position.y = camera_center.y + camera_size.y / 2.f - 50.f; // 50 px above bottom
-
-			player.setPosition(new_position);
 		}
 
-		// Player hit by projectile OR enemy hit by player's projectile
+		// Player hit by enemy projectile or enemy hit by player projectile
 		else if (MatchesCategories(pair, ReceiverCategories::kPlayerAircraft, ReceiverCategories::kEnemyProjectile) ||
 			MatchesCategories(pair, ReceiverCategories::kEnemyAircraft, ReceiverCategories::kAlliedProjectile))
 		{
 			auto& aircraft = static_cast<Aircraft&>(*pair.first);
 			auto& projectile = static_cast<Projectile&>(*pair.second);
 
-			aircraft.Damage(projectile.GetDamage());
+			if (!aircraft.IsInvincible())
+			{
+				aircraft.Damage(projectile.GetDamage());
+
+				if (aircraft.GetCategory() == static_cast<int>(ReceiverCategories::kPlayerAircraft))
+					aircraft.StartInvincibility();
+			}
+
 			projectile.Destroy();
 		}
 	}

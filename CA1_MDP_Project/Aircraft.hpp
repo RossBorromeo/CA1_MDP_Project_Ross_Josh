@@ -13,8 +13,6 @@ class Aircraft : public Entity
 public:
 	Aircraft(AircraftType type, const TextureHolder& textures, const FontHolder& fonts);
 	unsigned int GetCategory() const override;
-
-	//void DisablePickups();
 	int GetIdentifier();
 	void SetIdentifier(int identifier);
 	int GetMissileAmmo() const;
@@ -38,13 +36,16 @@ public:
 	void Remove() override;
 	void PlayLocalSound(CommandQueue& commands, SoundEffect effect);
 
+	// Invincibility handling
+	void UpdateInvincibility(sf::Time dt);
+	void StartInvincibility();
+	bool IsInvincible() const;
+
 private:
 	virtual void DrawCurrent(sf::RenderTarget& target, sf::RenderStates states) const;
 	virtual void UpdateCurrent(sf::Time dt, CommandQueue& commands) override;
 	void CheckProjectileLaunch(sf::Time dt, CommandQueue& commands);
 	bool IsAllied() const;
-	/*void CreatePickup(SceneNode& node, const TextureHolder& textures) const;
-	void CheckPickupDrop(CommandQueue& commands);*/
 	void UpdateRollAnimation();
 
 private:
@@ -72,10 +73,9 @@ private:
 	bool m_is_marked_for_removal;
 	bool m_show_explosion;
 	bool m_explosion_began;
-	/*bool m_spawned_pickup;
-	bool m_pickups_enabled;*/
-
 	int m_identifier;
 
+	// Invincibility state
+	sf::Time m_invincibility_timer;
+	const sf::Time m_invincibility_duration = sf::seconds(2.f);
 };
-
