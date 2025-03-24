@@ -4,7 +4,7 @@
 #include "Utility.hpp"
 #include "Button.hpp"
 
-//Ross - Adjusted Button to centre of the screen
+//Ross - Adjusted Button to centre of the screen / added Host and Join buttons
 MenuState::MenuState(StateStack& stack, Context context)
     :State(stack, context)
 {
@@ -22,11 +22,27 @@ MenuState::MenuState(StateStack& stack, Context context)
         });
 
     auto settings_button = std::make_shared<gui::Button>(context);
-    settings_button->setPosition(410, 550);
+    settings_button->setPosition(410, 500);
     settings_button->SetText("Settings");
     settings_button->SetCallback([this]()
         {
             RequestStackPush(StateID::kSettings);
+        });
+
+    auto host_button = std::make_shared<gui::Button>(context); 
+    host_button->setPosition(410, 550);
+    host_button->SetText("Host");
+    host_button->SetCallback([this]()
+        {
+            RequestStackPush(StateID::kHostGame);
+        });
+
+    auto join_button = std::make_shared<gui::Button>(context); 
+    join_button->setPosition(410, 600);
+    join_button->SetText("Join");
+    join_button->SetCallback([this]()
+        {
+            RequestStackPush(StateID::kJoinGame);
         });
 
     auto exit_button = std::make_shared<gui::Button>(context);
@@ -39,6 +55,8 @@ MenuState::MenuState(StateStack& stack, Context context)
 
     m_gui_container.Pack(play_button);
     m_gui_container.Pack(settings_button);
+    m_gui_container.Pack(host_button);  
+    m_gui_container.Pack(join_button);  
     m_gui_container.Pack(exit_button);
 
     //Play the music
