@@ -105,10 +105,10 @@ void Aircraft::UpdateTexts() {
 	m_health_display->setPosition(0.f, 50.f);
 	m_health_display->setRotation(-getRotation());
 
-	if (m_missile_display) {
+	/*if (m_missile_display) {
 		m_missile_display->setPosition(0.f, 70.f);
 		m_missile_display->SetString(m_missile_ammo == 0 ? "" : "M: " + std::to_string(m_missile_ammo));
-	}
+	}*/
 }
 
 void Aircraft::UpdateMovementPattern(sf::Time dt) {

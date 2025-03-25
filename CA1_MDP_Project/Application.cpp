@@ -15,7 +15,7 @@ Application::Application()
 	, m_stack(State::Context(m_window, m_textures, m_fonts, m_music, m_sound, m_key_binding_1, m_key_binding_2))
 {
 	m_window.setKeyRepeatEnabled(false);
-	m_fonts.Load(Font::kMain, "Media/Fonts/Sansation.ttf");
+	m_fonts.Load(Font::kMain, "Media/Fonts/PixeloidSansBold-PKnYd.ttf");
 	m_textures.Load(TextureID::kTitleScreen, "Media/Textures/TitleScreen.png");
 	m_textures.Load(TextureID::kButtons, "Media/Textures/Buttons.png");
 
@@ -81,6 +81,6 @@ void Application::RegisterStates()
 	m_stack.RegisterState<PauseState>(StateID::kPause);
 	m_stack.RegisterState<PauseState>(StateID::kNetworkPause, true);
 	m_stack.RegisterState<SettingsState>(StateID::kSettings);
-	m_stack.RegisterState<GameOverState>(StateID::kGameOver, "Mission Failed!");
-	m_stack.RegisterState<GameOverState>(StateID::kMissionSuccess, "Mission Successful!");
+	m_stack.RegisterState<GameOverState>(StateID::kGameOver, "Ship Destroyed!");
+	m_stack.RegisterState<GameOverState>(StateID::kMissionSuccess, "Asteroids Avoided!");
 }
