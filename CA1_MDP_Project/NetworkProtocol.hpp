@@ -1,5 +1,5 @@
 #pragma once
-const unsigned short SERVER_PORT = 50000; // Greater than 49151, the dynamic port range
+const unsigned short SERVER_PORT = 50001; // Greater than 49151, the dynamic port range
 namespace Server
 {
 	enum class PacketType
