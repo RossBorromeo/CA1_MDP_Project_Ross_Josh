@@ -338,8 +338,6 @@ void GameServer::HandleIncomingPackets(sf::Packet& packet, RemotePeer& receiving
         if (action == GameActions::kEnemyExplode && Utility::RandomInt(3) == 0 && &receiving_peer == m_peers[0].get())
         {
             sf::Packet packet;
-            packet << static_cast<sf::Int32>(Server::PacketType::kSpawnPickup);
-           /* packet << static_cast<sf::Int32>(Utility::RandomInt(static_cast<int>(PickupType::kPickupCount)));*/
             packet << x;
             packet << y;
 

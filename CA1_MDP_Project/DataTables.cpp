@@ -4,6 +4,7 @@
 #include "PickupType.hpp"
 #include "Aircraft.hpp"
 #include "ParticleType.hpp"
+#include "NetworkProtocol.hpp"
 
 std::vector<AircraftData> InitializeAircraftData()
 {
@@ -108,3 +109,25 @@ std::vector<ParticleData> InitializeParticleData()
 
     return data;
 }
+
+
+
+std::map<int, SpawnPoint> InitializeSpawnPoints()
+{
+    std::map<int, SpawnPoint> data;
+
+    const float padding = 100.f;
+    const float available_width = WINDOW_WIDTH - 2 * padding;
+    const float spacing = available_width / std::max(1, static_cast<int>(MAX_CONNECTIONS - 1));
+    const float y_position = WINDOW_HEIGHT - 150.f;
+
+    for (int i = 0; i < MAX_CONNECTIONS; ++i)
+    {
+        data[i] = SpawnPoint();
+        data[i].m_x = padding + i * spacing;
+        data[i].m_y = y_position;
+    }
+
+    return data;
+}
+
