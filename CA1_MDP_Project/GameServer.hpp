@@ -1,20 +1,23 @@
 #pragma once
+
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Config.hpp>
 #include <SFML/Network/TcpSocket.hpp>
 #include <SFML/Network/TcpListener.hpp>
 #include <SFML/System/Clock.hpp>
 #include <SFML/System/Thread.hpp>
+#include <SFML/Graphics/Rect.hpp>
 #include <map>
 #include <memory>
 #include <string>
-#include <SFML/Graphics/Rect.hpp>
+#include <vector>
 
 class GameServer
 {
 public:
 	explicit GameServer(sf::Vector2f battlefield_size);
 	~GameServer();
+
 	void NotifyPlayerSpawn(sf::Int32 aircraft_identifier);
 	void NotifyPlayerRealtimeChange(sf::Int32 aircraft_identifier, sf::Int32 action, bool action_enabled);
 	void NotifyPlayerEvent(sf::Int32 aircraft_identifier, sf::Int32 action);
@@ -38,7 +41,7 @@ private:
 		std::map<sf::Int32, bool> m_realtime_actions;
 	};
 
-	typedef std::unique_ptr<RemotePeer> PeerPtr;
+	using PeerPtr = std::unique_ptr<RemotePeer>;
 
 private:
 	void SetListening(bool enable);
@@ -46,10 +49,9 @@ private:
 	void Tick();
 	sf::Time Now() const;
 
+	void HandleIncomingConnections();
 	void HandleIncomingPackets();
 	void HandleIncomingPackets(sf::Packet& packet, RemotePeer& receiving_peer, bool& detected_timeout);
-
-	void HandleIncomingConnections();
 	void HandleDisconnections();
 
 	void InformWorldState(sf::TcpSocket& socket);
@@ -67,18 +69,21 @@ private:
 	std::size_t m_max_connected_players;
 	std::size_t m_connected_players;
 
+	std::vector<PeerPtr> m_peers;
+	sf::Int32 m_aircraft_identifier_counter;
+	std::map<sf::Int32, AircraftInfo> m_aircraft_info;
+
+	bool m_waiting_thread_end;
+	bool m_game_started;  
+
+	std::map<sf::Int32, bool> m_players_ready; 
+
 	float m_world_height;
 	sf::FloatRect m_battlefield_rect;
 	float m_battlefield_scrollspeed;
 
 	std::size_t m_aircraft_count;
-	std::map<sf::Int32, AircraftInfo> m_aircraft_info;
-
-	std::vector<PeerPtr> m_peers;
-	sf::Int32 m_aircraft_identifier_counter;
-	bool m_waiting_thread_end;
 
 	sf::Time m_last_spawn_time;
 	sf::Time m_time_for_next_spawn;
 };
-

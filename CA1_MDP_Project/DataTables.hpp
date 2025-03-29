@@ -57,4 +57,4 @@ std::vector<AircraftData> InitializeAircraftData();
 std::vector<ProjectileData> InitializeProjectileData();
 //std::vector<PickupData> InitializePickupData();
 std::vector<ParticleData> InitializeParticleData();
-std::map<int, SpawnPoint> InitializeSpawnPoints()
+std::map<int, SpawnPoint> InitializeSpawnPoints();
