@@ -47,8 +47,14 @@ struct ParticleData
 	sf::Time m_lifetime;
 };
 
+struct SpawnPoint
+{
+	float m_x;
+	float m_y;
+};
+
 std::vector<AircraftData> InitializeAircraftData();
 std::vector<ProjectileData> InitializeProjectileData();
 //std::vector<PickupData> InitializePickupData();
 std::vector<ParticleData> InitializeParticleData();
-
+std::map<int, SpawnPoint> InitializeSpawnPoints()
