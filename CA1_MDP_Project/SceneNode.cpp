@@ -24,6 +24,11 @@ SceneNode::Ptr SceneNode::DetachChild(const SceneNode& node)
     return Ptr();
 }
 
+std::vector<SceneNode::Ptr>& SceneNode::GetChildren()
+{
+    return m_children;
+}
+
 void SceneNode::Update(sf::Time dt, CommandQueue& commands)
 {
     UpdateCurrent(dt, commands);
