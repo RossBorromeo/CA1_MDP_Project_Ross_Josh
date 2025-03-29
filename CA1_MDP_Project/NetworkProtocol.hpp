@@ -24,7 +24,7 @@ namespace Server
 		kUpdateClientState,      // Aircraft states + positions
 		kMissionSuccess,         // No args � indicates game win
 		kWaitingNotice,          // Server waiting for all players to be ready
-		kGameReady               // All players ready  start game
+		kGameReady,              // All players ready  start game
 	};
 }
 

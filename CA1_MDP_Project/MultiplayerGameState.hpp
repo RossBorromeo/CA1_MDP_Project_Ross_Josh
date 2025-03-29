@@ -51,5 +51,12 @@ private:
 	bool m_game_started;
 	sf::Time m_client_timeout;
 	sf::Time m_time_since_last_packet;
-};
 
+	sf::Int32 m_identifier = -1;             // Unique ID for this player's aircraft
+	float m_world_height = 0.f;              // From server's world height
+	float m_scroll_position = 0.f;           // Initial battlefield scroll position
+
+	//  NEW: Multiplayer readiness tracking
+	bool m_local_ready = false;
+	std::size_t m_ready_players = 0;
+};

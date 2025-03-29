@@ -21,6 +21,7 @@ GameServer::GameServer(sf::Vector2f battlefield_size)
     , m_waiting_thread_end(false)
     , m_last_spawn_time(sf::Time::Zero)
     , m_time_for_next_spawn(sf::seconds(5.f))
+    , m_game_started(false)
 {
     m_listener_socket.setBlocking(false);
     m_peers[0].reset(new RemotePeer());
@@ -82,44 +83,48 @@ void GameServer::SetListening(bool enable)
 
 void GameServer::ExecutionThread()
 {
-    //Initialisation
     SetListening(true);
 
     sf::Time frame_rate = sf::seconds(1.f / 60.f);
-    sf::Time frame_time = sf::Time::Zero;
     sf::Time tick_rate = sf::seconds(1.f / 20.f);
+    sf::Time frame_time = sf::Time::Zero;
     sf::Time tick_time = sf::Time::Zero;
     sf::Clock frame_clock, tick_clock;
 
     while (!m_waiting_thread_end)
     {
-        //This is the game loop
         HandleIncomingConnections();
         HandleIncomingPackets();
 
-        frame_time += frame_clock.getElapsedTime();
-        frame_clock.restart();
+        frame_time += frame_clock.restart();
+        tick_time += tick_clock.restart();
 
-        tick_time += tick_clock.getElapsedTime();
-        tick_clock.restart();
-
-        //Fixed time step
-        while (frame_time >= frame_rate)
+        if (m_game_started)
         {
-            m_battlefield_rect.top += m_battlefield_scrollspeed * frame_rate.asSeconds();
-            frame_time -= frame_rate;
+            while (frame_time >= frame_rate)
+            {
+                m_battlefield_rect.top += m_battlefield_scrollspeed * frame_rate.asSeconds();
+                frame_time -= frame_rate;
+            }
+
+            while (tick_time >= tick_rate)
+            {
+                Tick();
+                tick_time -= tick_rate;
+            }
+        }
+        else
+        {
+            sf::Packet waiting;
+            waiting << static_cast<sf::Int32>(Server::PacketType::kBroadcastMessage);
+            waiting << "Waiting for players to press Ready...";
+            SendToAll(waiting);
         }
 
-        //Fixed time step
-        while (tick_time >= tick_rate)
-        {
-            Tick();
-            tick_time -= tick_rate;
-        }
-        //sleep
         sf::sleep(sf::milliseconds(50));
     }
 }
+
 
 void GameServer::Tick()
 {
@@ -268,7 +273,27 @@ void GameServer::HandleIncomingPackets(sf::Packet& packet, RemotePeer& receiving
     }
     break;
 
-    case Client::PacketType::kRequestCoopPartner:
+    case Client::PacketType::kReadyNotice:
+    {
+        sf::Int32 id;
+        packet >> id;
+        m_players_ready[id] = true;
+
+        if (!m_game_started && m_players_ready.size() == m_connected_players)
+        {
+            m_game_started = true;
+            sf::Packet ready_packet;
+            ready_packet << static_cast<sf::Int32>(Server::PacketType::kGameReady);
+            SendToAll(ready_packet);
+            BroadcastMessage("Game Started");
+            SetListening(false);
+        }
+    }
+    break;
+
+
+
+  /*  case Client::PacketType::kRequestCoopPartner:
     {
         receiving_peer.m_aircraft_identifiers.emplace_back(m_aircraft_identifier_counter);
         m_aircraft_info[m_aircraft_identifier_counter].m_position = sf::Vector2f(m_battlefield_rect.width / 2, m_battlefield_rect.top + m_battlefield_rect.height / 2);
@@ -301,8 +326,8 @@ void GameServer::HandleIncomingPackets(sf::Packet& packet, RemotePeer& receiving
         }
 
         m_aircraft_identifier_counter++;
-    }
-    break;
+    }*/
+    //break;
 
     case Client::PacketType::kStateUpdate:
     {
@@ -395,37 +420,48 @@ void GameServer::HandleDisconnections()
 {
     for (auto itr = m_peers.begin(); itr != m_peers.end();)
     {
-        if ((*itr)->m_timed_out)
+        RemotePeer* peer = itr->get();
+
+        if (peer->m_timed_out)
         {
-            //Inform everyone of a disconnection, erase
-            for (sf::Int32 identifer : (*itr)->m_aircraft_identifiers)
+            // Notify and erase all aircraft owned by this peer
+            for (sf::Int32 id : peer->m_aircraft_identifiers)
             {
-                SendToAll((sf::Packet() << static_cast<sf::Int32>(Server::PacketType::kPlayerDisconnect) << identifer));
-                m_aircraft_info.erase(identifer);
+                // Inform all clients about disconnection
+                sf::Packet disconnect_packet;
+                disconnect_packet << static_cast<sf::Int32>(Server::PacketType::kPlayerDisconnect);
+                disconnect_packet << id;
+                SendToAll(disconnect_packet);
+
+                // Remove aircraft info
+                m_aircraft_info.erase(id);
+
+                // Remove ready flag
+                m_players_ready.erase(id);
             }
 
+            m_aircraft_count -= peer->m_aircraft_identifiers.size();
             m_connected_players--;
-            m_aircraft_count -= (*itr)->m_aircraft_identifiers.size();
 
+            // Erase peer
             itr = m_peers.erase(itr);
 
-            //If the number of peers has dropped below max_connections
-            if (m_connected_players < m_max_connected_players)
+            // Reopen listener if game hasn't started and room available
+            if (!m_game_started && m_connected_players < m_max_connected_players)
             {
                 m_peers.emplace_back(PeerPtr(new RemotePeer()));
                 SetListening(true);
             }
 
-            BroadcastMessage("A player has disconnected");
-
+            BroadcastMessage("A player has disconnected.");
         }
         else
         {
             ++itr;
         }
     }
-
 }
+
 
 void GameServer::InformWorldState(sf::TcpSocket& socket)
 {
