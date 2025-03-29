@@ -22,7 +22,7 @@ namespace Server
 		kSpawnEnemy,             // AircraftType ID + position (x, y)
 		kSpawnSelf,              // Aircraft ID + position (x, y)
 		kUpdateClientState,      // Aircraft states + positions
-		kMissionSuccess,         // No args – indicates game win
+		kMissionSuccess,         // No args ï¿½ indicates game win
 		kWaitingNotice,          // Server waiting for all players to be ready
 		kGameReady               // All players ready  start game
 	};
