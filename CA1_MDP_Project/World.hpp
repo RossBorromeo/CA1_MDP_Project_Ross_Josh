@@ -13,9 +13,14 @@
 #include "BloomEffect.hpp"
 #include "SoundPlayer.hpp"
 
+#include <SFML/Network/Packet.hpp>
+
 #include <array>
 #include "PickupType.hpp"
 #include "NetworkNode.hpp"
+
+
+
 
 class World : private sf::NonCopyable
 {
@@ -44,14 +49,13 @@ public:
 	sf::FloatRect GetBattlefieldBounds() const;
 	bool PollGameAction(GameActions::Action& out);
 
+	
+
 private:
 	void LoadTextures();
 	void BuildScene();
 	void AdaptPlayerPosition();
 	void AdaptPlayerVelocity();
-
-	//void SpawnRandomEnemy();
-
 	void GenerateRandomEnemy();
 	void AddEnemies();
 
@@ -61,14 +65,10 @@ private:
 	void HandleCollisions();
 	void UpdateSounds();
 
-
 private:
 	struct SpawnPoint
 	{
-		SpawnPoint(AircraftType type, float x, float y) :m_type(type), m_x(x), m_y(y)
-		{
-
-		}
+		SpawnPoint(AircraftType type, float x, float y) : m_type(type), m_x(x), m_y(y) {}
 		AircraftType m_type;
 		float m_x;
 		float m_y;
@@ -82,7 +82,7 @@ private:
 	FontHolder& m_fonts;
 	SoundPlayer& m_sounds;
 	SceneNode m_scenegraph;
-	std::array<SceneNode*, static_cast<int>(SceneLayers::kLayerCount)> m_scene_layers;
+	std::array<SceneNode*, NumSceneLayers> m_scene_layers;
 	sf::FloatRect m_world_bounds;
 	sf::Vector2f m_spawn_position;
 	float m_scrollspeed;
@@ -109,4 +109,3 @@ private:
 	std::uniform_real_distribution<float> m_y_distribution;
 	std::uniform_int_distribution<int> m_type_distribution;
 };
-

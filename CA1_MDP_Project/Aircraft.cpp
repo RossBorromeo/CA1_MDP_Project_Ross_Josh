@@ -41,6 +41,7 @@ Aircraft::Aircraft(AircraftType type, const TextureHolder& textures, const FontH
 	, m_identifier(0)
 	, m_invincibility_timer(sf::Time::Zero)
 	, m_invincibility_duration(sf::seconds(1.5f))
+	, m_respawn_position()
 {
 	m_explosion.SetFrameSize(sf::Vector2i(256, 256));
 	m_explosion.SetNumFrames(16);
@@ -140,6 +141,16 @@ void Aircraft::LaunchMissile() {
 		m_is_launching_missile = true;
 		--m_missile_ammo;
 	}
+}
+
+void Aircraft::SetRespawnPosition(sf::Vector2f pos)
+{
+	m_respawn_position = pos;
+}
+
+sf::Vector2f Aircraft::GetRespawnPosition() const
+{
+	return m_respawn_position;
 }
 
 void Aircraft::CreateBullet(SceneNode& node, const TextureHolder& textures) const {

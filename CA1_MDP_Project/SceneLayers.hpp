@@ -7,3 +7,6 @@ enum class SceneLayers
 	kUpperAir,
 	kLayerCount
 };
+
+
+constexpr std::size_t NumSceneLayers = static_cast<std::size_t>(SceneLayers::kLayerCount);

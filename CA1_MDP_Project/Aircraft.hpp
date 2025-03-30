@@ -41,6 +41,10 @@ public:
 	void StartInvincibility();
 	bool IsInvincible() const;
 
+	void SetRespawnPosition(sf::Vector2f pos);
+	sf::Vector2f GetRespawnPosition() const;
+
+
 private:
 	virtual void DrawCurrent(sf::RenderTarget& target, sf::RenderStates states) const;
 	virtual void UpdateCurrent(sf::Time dt, CommandQueue& commands) override;
@@ -74,6 +78,8 @@ private:
 	bool m_show_explosion;
 	bool m_explosion_began;
 	int m_identifier;
+	sf::Vector2f m_respawn_position;
+
 
 	// Invincibility state
 	sf::Time m_invincibility_timer;
