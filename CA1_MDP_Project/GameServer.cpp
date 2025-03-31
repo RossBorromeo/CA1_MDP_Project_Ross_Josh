@@ -269,6 +269,8 @@ void GameServer::HandleIncomingPackets(sf::Packet& packet, RemotePeer& receiving
     sf::Int32 packet_type;
     packet >> packet_type;
 
+    std::cout << "[GameServer] Incoming packet type: " << packet_type << std::endl;
+
     switch (static_cast<Client::PacketType> (packet_type))
     {
     case Client::PacketType::kQuit:
@@ -303,6 +305,11 @@ void GameServer::HandleIncomingPackets(sf::Packet& packet, RemotePeer& receiving
         packet >> id;
         m_players_ready[id] = true;
 
+        std::cout << "[GameServer] Player " << id << " marked as ready\n";
+        std::cout << "[GameServer] Ready count: " << m_players_ready.size()
+            << " / " << m_connected_players << std::endl;
+
+
         if (!m_game_started && m_players_ready.size() == m_connected_players)
         {
             m_game_started = true;
@@ -311,7 +318,13 @@ void GameServer::HandleIncomingPackets(sf::Packet& packet, RemotePeer& receiving
             SendToAll(ready_packet);
             BroadcastMessage("Game Started");
             SetListening(false);
+            std::cout << "[GameServer] Player " << id << " is ready\n";
+            std::cout << "[GameServer] Ready count: " << m_players_ready.size()
+                << "/" << m_connected_players << std::endl;
         }
+
+        std::cout << "[GameServer] Player " << id << " marked as ready\n";
+
     }
     break;
 
@@ -401,13 +414,15 @@ void GameServer::HandleIncomingConnections()
     if (!m_listening_state)
         return;
 
-    //  Ensure the slot exists before accessing it
+    // Ensure the current slot exists
     if (m_connected_players >= m_peers.size())
         m_peers.emplace_back(std::make_unique<RemotePeer>());
 
-    if (m_listener_socket.accept(m_peers[m_connected_players]->m_socket) == sf::TcpListener::Done)
+    auto& peer = m_peers[m_connected_players];
+
+    if (m_listener_socket.accept(peer->m_socket) == sf::TcpListener::Done)
     {
-        auto& peer = m_peers[m_connected_players];
+        std::cout << "[GameServer] New connection accepted. Total: " << (m_connected_players + 1) << "\n";
 
         m_aircraft_info[m_aircraft_identifier_counter].m_position = sf::Vector2f(
             m_battlefield_rect.width / 2.f,
@@ -429,14 +444,37 @@ void GameServer::HandleIncomingConnections()
         NotifyPlayerSpawn(m_aircraft_identifier_counter++);
 
         peer->m_socket.send(packet);
+        m_players_ready[m_aircraft_identifier_counter] = true;
         peer->m_ready = true;
+
+
+     
+
         peer->m_last_packet_time = Now();
 
         m_aircraft_count++;
         m_connected_players++;
 
-        if (m_connected_players >= m_max_connected_players)
+        // Prepare next slot!
+        if (m_connected_players < m_max_connected_players)
+        {
+            m_peers.emplace_back(std::make_unique<RemotePeer>());
+        }
+        else
+        {
             SetListening(false);
+        }
+    }
+}
+void GameServer::HandleIncomingPackets(sf::TcpSocket& socket)
+{
+    sf::Packet packet;
+    while (socket.receive(packet) == sf::Socket::Done)
+    {
+        sf::Int32 packet_type;
+        packet >> packet_type;
+        std::cout << "[GameServer] Incoming packet type: " << packet_type << "\n";
+        // Handle the packet...
     }
 }
 

@@ -167,6 +167,7 @@ bool MultiplayerGameState::HandleEvent(const sf::Event& event)
 {
 	if (event.type == sf::Event::KeyPressed)
 	{
+		// Enter: Ready logic (already there)
 		if (event.key.code == sf::Keyboard::Return && m_connected && !m_game_started && !m_local_ready)
 		{
 			sf::Packet packet;
@@ -174,12 +175,32 @@ bool MultiplayerGameState::HandleEvent(const sf::Event& event)
 			packet << m_identifier;
 			m_socket.send(packet);
 			m_local_ready = true;
+
+			std::cout << "[Multiplayer] Sent ReadyNotice with ID: " << m_identifier << "\n";
 		}
-		else if (event.key.code == sf::Keyboard::Escape && m_game_started)
+
+		// Host shortcut (already there)
+		if (m_host && event.key.code == sf::Keyboard::Return && !m_game_started && !m_local_ready)
 		{
-			RequestStackPush(StateID::kPause);
+			sf::Packet packet;
+			packet << static_cast<sf::Int32>(Client::PacketType::kReadyNotice);
+			packet << m_identifier;
+			m_socket.send(packet);
+			m_local_ready = true;
+
+			std::cout << "[Host] Host player sent ReadyNotice with ID: " << m_identifier << "\n";
+		}
+
+		//  ADD THIS: Pause Menu
+		if (event.key.code == sf::Keyboard::Escape && m_game_started)
+		{
+			std::cout << "[Multiplayer] Pause triggered\n";
+			RequestStackPush(StateID::kPause);  // Or use kNetworkPause if you have that too
 		}
 	}
+
+	
+
 
 	CommandQueue& commands = m_world.GetCommandQueue();
 	for (auto& pair : m_players)
@@ -240,32 +261,23 @@ void MultiplayerGameState::HandlePacket(sf::Int32 type, sf::Packet& packet)
 		sf::Vector2f pos;
 		packet >> pos.x >> pos.y;
 
-		// Safety check
-		if (m_identifier < 0 || m_identifier >= MAX_CONNECTIONS)
-		{
-			std::cerr << "[ERROR] Invalid m_identifier: " << m_identifier << "\n";
-			return;
-		}
-
 		std::cout << "[Multiplayer] Spawning local aircraft with ID: " << m_identifier
 			<< " at position (" << pos.x << ", " << pos.y << ")\n";
 
-		// Create aircraft and assign position
-		Aircraft* aircraft = m_world.AddAircraft(m_identifier);
-		if (!aircraft)
-		{
-			std::cerr << "[ERROR] AddAircraft() returned nullptr!\n";
-			return;
-		}
-
+		auto* aircraft = m_world.AddAircraft(m_identifier);
 		aircraft->setPosition(pos);
 
-		// Add player
+		// Center the camera on the aircraft
+		sf::View view = GetContext().window->getDefaultView();
+		view.setCenter(pos);
+		GetContext().window->setView(view);
+
 		m_players[m_identifier] = std::make_unique<Player>(&m_socket, m_identifier, GetContext().keys1);
 		m_local_player_identifiers.push_back(m_identifier);
-
 		break;
 	}
+
+
 
 	case Server::PacketType::kInitialState:
 	{
@@ -312,6 +324,19 @@ void MultiplayerGameState::HandlePacket(sf::Int32 type, sf::Packet& packet)
 	}
 	case Server::PacketType::kGameReady:
 		m_game_started = true;
+
+		// Center camera on local player
+		if (!m_local_player_identifiers.empty())
+		{
+			if (Aircraft* aircraft = m_world.GetAircraft(m_local_player_identifiers.front()))
+			{
+				sf::Vector2f pos = aircraft->getPosition();
+				GetContext().window->setView(sf::View(
+					sf::FloatRect(pos.x - 960.f, pos.y - 540.f, 1920.f, 1080.f)
+				));
+				std::cout << "[Multiplayer] Centering camera on Aircraft ID " << aircraft->GetIdentifier() << " at " << pos.x << ", " << pos.y << "\n";
+			}
+		}
 		break;
 	case Server::PacketType::kUpdateClientState:
 	{
