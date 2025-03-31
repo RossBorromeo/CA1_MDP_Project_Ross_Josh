@@ -111,23 +111,41 @@ std::vector<ParticleData> InitializeParticleData()
 }
 
 
-
 std::map<int, SpawnPoint> InitializeSpawnPoints()
 {
     std::map<int, SpawnPoint> data;
 
-    const float padding = 100.f;
-    const float available_width = WINDOW_WIDTH - 2 * padding;
-    const float spacing = available_width / std::max(1, static_cast<int>(MAX_CONNECTIONS - 1));
-    const float y_position = WINDOW_HEIGHT - 150.f;
+    const int MAX_CONNECTIONS = 15;
+    const int SPAWN_COLUMNS = 5;
+    const int SPAWN_ROWS = 3;
+    const float WINDOW_WIDTH = 1920.f;
+    const float WINDOW_HEIGHT = 1080.f;
+    const float HORIZONTAL_PADDING = 100.f;
+    const float VERTICAL_START_Y = WINDOW_HEIGHT - 300.f;
+    const float VERTICAL_SPACING = 120.f;
 
-    for (int i = 0; i < MAX_CONNECTIONS; ++i)
+    const float available_width = WINDOW_WIDTH - 2 * HORIZONTAL_PADDING;
+    const float spacing_x = available_width / (SPAWN_COLUMNS - 1);
+
+    int spawn_id = 0;
+    for (int row = 0; row < SPAWN_ROWS; ++row)
     {
-        data[i] = SpawnPoint();
-        data[i].m_x = padding + i * spacing;
-        data[i].m_y = y_position;
+        float y = VERTICAL_START_Y - row * VERTICAL_SPACING;
+
+        for (int col = 0; col < SPAWN_COLUMNS; ++col)
+        {
+            if (spawn_id >= MAX_CONNECTIONS)
+                break;
+
+            float x = HORIZONTAL_PADDING + col * spacing_x;
+
+            data[spawn_id] = SpawnPoint{ x, y };
+            ++spawn_id;
+        }
     }
 
     return data;
 }
+
+
 
