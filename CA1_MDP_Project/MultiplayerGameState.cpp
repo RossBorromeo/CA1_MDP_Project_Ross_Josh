@@ -245,7 +245,7 @@ bool MultiplayerGameState::HandleEvent(const sf::Event& event)
 		if (event.key.code == sf::Keyboard::Escape && m_game_started)
 		{
 			std::cout << "[Multiplayer] Pause triggered\n";
-			RequestStackPush(StateID::kNetworkPause);  
+			RequestStackPush(StateID::kPause);  
 		}
 
 

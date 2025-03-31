@@ -3,6 +3,7 @@
 #include "Projectile.hpp"
 #include "ParticleNode.hpp"
 #include "SoundNode.hpp"
+#include "SpriteNode.hpp"
 #include <iostream>
 
 
@@ -34,9 +35,8 @@ World::World(sf::RenderTarget& output_target, FontHolder& font, SoundPlayer& sou
 	m_scene_texture.create(m_target.getSize().x, m_target.getSize().y);
 	LoadTextures();
 	BuildScene();
-	std::cout << "UpperAir layer is: " << m_scene_layers[static_cast<int>(SceneLayers::kUpperAir)] << "\n";
 	m_camera.setCenter(m_spawn_position);
-	SetWorldHeight(m_scrollspeed);
+
 }
 
 void World::SetWorldScrollCompensation(float compensation)
@@ -46,6 +46,7 @@ void World::SetWorldScrollCompensation(float compensation)
 
 void World::Update(sf::Time dt)
 {
+	UpdateBackground(dt.asSeconds());
 	m_spawn_timer += dt;
 	if (m_spawn_timer >= m_spawn_interval)
 	{
@@ -53,16 +54,18 @@ void World::Update(sf::Time dt)
 		m_spawn_timer = sf::Time::Zero;
 	}
 
-	SpawnEnemies();
+
 	m_camera.move(0, m_scrollspeed * dt.asSeconds());
+	// 2. THEN zero velocity AFTER command application
+	for (Aircraft* aircraft : m_player_aircraft)
+		aircraft->SetVelocity(0.f, 0.f);
+
 
 	// 1. Process commands FIRST
 	while (!m_command_queue.IsEmpty())
 		m_scenegraph.OnCommand(m_command_queue.Pop(), dt);
 
-	// 2. THEN zero velocity AFTER command application
-	for (Aircraft* aircraft : m_player_aircraft)
-		aircraft->SetVelocity(0.f, 0.f);
+
 
 	DestroyEntitiesOutsideView();
 	GuideMissiles();
@@ -75,6 +78,7 @@ void World::Update(sf::Time dt)
 	m_player_aircraft.erase(first_to_remove, m_player_aircraft.end());
 
 	m_scenegraph.RemoveWrecks();
+	SpawnEnemies();
 	m_scenegraph.Update(dt, m_command_queue);
 	AdaptPlayerPosition();
 	UpdateSounds();
@@ -83,27 +87,12 @@ void World::Update(sf::Time dt)
 
 void World::Draw()
 {
-	// Log the camera view info
-	sf::Vector2f center = m_camera.getCenter();
-	sf::Vector2f size = m_camera.getSize();
-
-
+	
 	if (PostEffect::IsSupported())
 	{
 		m_scene_texture.clear();
 		m_scene_texture.setView(m_camera);
-		m_scene_texture.draw(m_scenegraph);
-
-		// DEBUG: draw red dots for player aircraft
-		for (Aircraft* aircraft : m_player_aircraft)
-		{
-			sf::CircleShape debug(10.f);
-			debug.setFillColor(sf::Color::Red);
-			debug.setOrigin(10.f, 10.f);
-			debug.setPosition(aircraft->GetWorldPosition());
-			m_scene_texture.draw(debug);
-		}
-
+		m_scene_texture.draw(m_scenegraph);		
 		m_scene_texture.display();
 		m_bloom_effect.Apply(m_scene_texture, m_target);
 	}
@@ -111,17 +100,59 @@ void World::Draw()
 	{
 		m_target.setView(m_camera);
 		m_target.draw(m_scenegraph);
+	}
+}
 
-		// DEBUG: draw red dots for player aircraft
-		for (Aircraft* aircraft : m_player_aircraft)
+
+
+Aircraft* World::GetAircraft(int identifier) const
+{
+	for (Aircraft* a : m_player_aircraft)
+	{
+		if (a->GetIdentifier() == identifier)
 		{
-			sf::CircleShape debug(10.f);
-			debug.setFillColor(sf::Color::Red);
-			debug.setOrigin(10.f, 10.f);
-			debug.setPosition(aircraft->GetWorldPosition());
-			m_target.draw(debug);
+			return a;
 		}
 	}
+	return nullptr;
+}
+
+void World::RemoveAircraft(int identifier)
+{
+	Aircraft* aircraft = GetAircraft(identifier);
+	if (aircraft)
+	{
+		aircraft->Destroy();
+
+	}
+}
+
+Aircraft* World::AddAircraft(int identifier)
+{
+	std::unique_ptr<Aircraft> player(new Aircraft(AircraftType::kBattleShip, m_textures, m_fonts));
+	player->setPosition(m_camera.getCenter());
+	player->SetIdentifier(identifier);
+
+	m_player_aircraft.emplace_back(player.get());
+	m_scene_layers[static_cast<int>(SceneLayers::kUpperAir)]->AttachChild(std::move(player));
+	return m_player_aircraft.back();
+}
+
+
+bool World::PollGameAction(GameActions::Action& out)
+{
+	return m_network_node->PollGameAction(out);
+}
+
+void World::SetCurrentBattleFieldPosition(float lineY)
+{
+	m_camera.setCenter(m_camera.getCenter().x, lineY - m_camera.getSize().y / 2);
+	m_spawn_position.y = m_world_bounds.height;
+}
+
+void World::SetWorldHeight(float scrollspeed)
+{
+	m_world_bounds.height = 15.f * 60.f * std::abs(scrollspeed);
 }
 
 
@@ -148,21 +179,6 @@ bool World::HasAlivePlayer() const
 
 
 
-bool World::PollGameAction(GameActions::Action& out)
-{
-	return m_network_node->PollGameAction(out);
-}
-
-void World::SetCurrentBattleFieldPosition(float lineY)
-{
-	m_camera.setCenter(m_camera.getCenter().x, lineY - m_camera.getSize().y / 2);
-	m_spawn_position.y = m_world_bounds.height;
-}
-
-void World::SetWorldHeight(float scrollspeed)
-{
-	m_world_bounds.height = 15.f * 60.f * std::abs(scrollspeed);
-}
 
 
 //void World::CreatePickup(sf::Vector2f position, PickupType type)
@@ -198,8 +214,8 @@ void World::LoadTextures()
 
 void World::BuildScene()
 {
-	// Initialize the different layers
-	for (std::size_t i = 0; i < NumSceneLayers; ++i)
+	//Initialize the different layers
+	for (std::size_t i = 0; i < static_cast<int>(SceneLayers::kLayerCount); ++i)
 	{
 		ReceiverCategories category = (i == static_cast<int>(SceneLayers::kLowerAir)) ? ReceiverCategories::kScene : ReceiverCategories::kNone;
 		SceneNode::Ptr layer(new SceneNode(category));
@@ -267,56 +283,7 @@ void World::AdaptPlayerPosition()
 }
 
 
-Aircraft* World::GetAircraft(int identifier) const
-{
-	for (Aircraft* a : m_player_aircraft)
-	{
-		if (a->GetIdentifier() == identifier)
-		{
-			return a;
-		}
-	}
-	return nullptr;
-}
 
-void World::RemoveAircraft(int identifier)
-{
-	Aircraft* aircraft = GetAircraft(identifier);
-	if (aircraft)
-	{
-		aircraft->Destroy();
-		
-	}
-}
-
-Aircraft* World::AddAircraft(int identifier)
-{
-	const int index = static_cast<int>(SceneLayers::kUpperAir);
-	assert(index < m_scene_layers.size());
-	assert(m_scene_layers[index] != nullptr);
-
-	// Create aircraft
-	std::unique_ptr<Aircraft> player = std::make_unique<Aircraft>(AircraftType::kBattleShip, m_textures, m_fonts);
-	sf::Vector2f pos = m_camera.getCenter();
-
-	// Clamp Y position within world bounds to avoid off-screen spawn
-	pos.y = std::min(pos.y, m_world_bounds.top + m_world_bounds.height - 100.f);
-	player->setPosition(pos);
-	player->SetIdentifier(identifier);
-
-	// Debug
-	std::cout << "[World] Adding Aircraft ID: " << identifier
-		<< " at position (" << pos.x << ", " << pos.y << ")\n";
-
-	// Store raw pointer before moving into scene graph
-	Aircraft* aircraft_ptr = player.get();
-	m_player_aircraft.emplace_back(aircraft_ptr);
-
-	m_scene_layers[index]->AttachChild(std::move(player));
-	std::cout << "[World] Aircraft attached to SceneLayer index: " << index << "\n";
-
-	return aircraft_ptr;
-}
 
 
 
@@ -341,10 +308,7 @@ void World::AdaptPlayerVelocity() //changed by Josh added in secondary player fu
 //Ross did this
 void World::GenerateRandomEnemy()
 {
-	if (m_networked_world)
-	{
-		return;
-	}
+	
 
 	static sf::Clock meteor_timer;
 	static sf::Clock avenger_timer;
@@ -559,7 +523,7 @@ void World::HandleCollisions()
 				player.StartInvincibility();
 
 				// Use aircraft's own saved respawn position
-				player.setPosition(player.GetRespawnPosition());
+				player.setPosition(player.GetRespawnPosition()); // Set different spawn position
 			}
 
 			enemy.Destroy();

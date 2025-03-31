@@ -159,9 +159,6 @@ void Player::HandleRealtimeNetworkInput(CommandQueue& commands)
     }
 }
 
-
-
-
 void Player::HandleNetworkEvent(Action action, CommandQueue& commands)
 {
     commands.Push(m_action_binding[action]);
