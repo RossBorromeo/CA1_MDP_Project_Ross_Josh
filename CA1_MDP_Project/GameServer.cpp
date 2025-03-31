@@ -87,28 +87,6 @@ void GameServer::ExecutionThread()
 {
     SetListening(true);
 
-    // Self-spawn for host
-    m_aircraft_info[m_aircraft_identifier_counter].m_position = sf::Vector2f(m_battlefield_rect.width / 2.f, m_battlefield_rect.top + m_battlefield_rect.height / 2.f);
-    m_aircraft_info[m_aircraft_identifier_counter].m_hitpoints = 100;
-    m_aircraft_info[m_aircraft_identifier_counter].m_missile_ammo = 2;
-    m_peers[0]->m_aircraft_identifiers.emplace_back(m_aircraft_identifier_counter);
-
-    // Build spawn packet and send to host
-    sf::Packet self_spawn;
-    self_spawn << static_cast<sf::Int32>(Server::PacketType::kSpawnSelf);
-    self_spawn << m_aircraft_identifier_counter;
-    self_spawn << m_aircraft_info[m_aircraft_identifier_counter].m_position.x;
-    self_spawn << m_aircraft_info[m_aircraft_identifier_counter].m_position.y;
-
-    m_peers[0]->m_socket.send(self_spawn);
-    m_peers[0]->m_ready = true;
-    m_peers[0]->m_last_packet_time = Now();
-
-    m_aircraft_count++;
-    m_connected_players++;
-    m_aircraft_identifier_counter++;
-
-
     sf::Time frame_rate = sf::seconds(1.f / 60.f);
     sf::Time tick_rate = sf::seconds(1.f / 20.f);
     sf::Time frame_time = sf::Time::Zero;
@@ -416,22 +394,14 @@ void GameServer::HandleIncomingPackets(sf::Packet& packet, RemotePeer& receiving
 void GameServer::HandleIncomingConnections()
 {
     if (!m_listening_state)
-        return;
-
-    // Ensure the current slot exists
-    if (m_connected_players >= m_peers.size())
-        m_peers.emplace_back(std::make_unique<RemotePeer>());
-
-    auto& peer = m_peers[m_connected_players];
-
-    if (m_listener_socket.accept(peer->m_socket) == sf::TcpListener::Done)
     {
-        std::cout << "[GameServer] New connection accepted. Total: " << (m_connected_players + 1) << "\n";
+        return;
+    }
 
-        m_aircraft_info[m_aircraft_identifier_counter].m_position = sf::Vector2f(
-            m_battlefield_rect.width / 2.f,
-            m_battlefield_rect.top + m_battlefield_rect.height / 2.f
-        );
+    if (m_listener_socket.accept(m_peers[m_connected_players]->m_socket) == sf::TcpListener::Done)
+    {
+        //Order the new client to spawn its player 1
+        m_aircraft_info[m_aircraft_identifier_counter].m_position = sf::Vector2f(m_battlefield_rect.width / 2, m_battlefield_rect.top + m_battlefield_rect.height / 2);
         m_aircraft_info[m_aircraft_identifier_counter].m_hitpoints = 100;
         m_aircraft_info[m_aircraft_identifier_counter].m_missile_ammo = 2;
 
@@ -441,42 +411,27 @@ void GameServer::HandleIncomingConnections()
         packet << m_aircraft_info[m_aircraft_identifier_counter].m_position.x;
         packet << m_aircraft_info[m_aircraft_identifier_counter].m_position.y;
 
-        peer->m_aircraft_identifiers.emplace_back(m_aircraft_identifier_counter);
+        m_peers[m_connected_players]->m_aircraft_identifiers.emplace_back(m_aircraft_identifier_counter);
 
         BroadcastMessage("New player");
-        InformWorldState(peer->m_socket);
+        InformWorldState(m_peers[m_connected_players]->m_socket);
         NotifyPlayerSpawn(m_aircraft_identifier_counter++);
 
-        peer->m_socket.send(packet);
-        m_players_ready[m_aircraft_identifier_counter] = true;
-        peer->m_ready = true;
-     
-
-        peer->m_last_packet_time = Now();
+        m_peers[m_connected_players]->m_socket.send(packet);
+        m_peers[m_connected_players]->m_ready = true;
+        m_peers[m_connected_players]->m_last_packet_time = Now();
 
         m_aircraft_count++;
         m_connected_players++;
 
-        // Prepare next slot!
-        if (m_connected_players < m_max_connected_players)
-        {
-            m_peers.emplace_back(std::make_unique<RemotePeer>());
-        }
-        else
+        if (m_connected_players >= m_max_connected_players)
         {
             SetListening(false);
         }
-    }
-}
-void GameServer::HandleIncomingPackets(sf::TcpSocket& socket)
-{
-    sf::Packet packet;
-    while (socket.receive(packet) == sf::Socket::Done)
-    {
-        sf::Int32 packet_type;
-        packet >> packet_type;
-        std::cout << "[GameServer] Incoming packet type: " << packet_type << "\n";
-        // Handle the packet...
+        else
+        {
+            m_peers.emplace_back(PeerPtr(new RemotePeer()));
+        }
     }
 }
 
@@ -485,46 +440,36 @@ void GameServer::HandleDisconnections()
 {
     for (auto itr = m_peers.begin(); itr != m_peers.end();)
     {
-        RemotePeer* peer = itr->get();
-
-        if (peer->m_timed_out)
+        if ((*itr)->m_timed_out)
         {
-            // Notify and erase all aircraft owned by this peer
-            for (sf::Int32 id : peer->m_aircraft_identifiers)
+            //Inform everyone of a disconnection, erase
+            for (sf::Int32 identifer : (*itr)->m_aircraft_identifiers)
             {
-                // Inform all clients about disconnection
-                sf::Packet disconnect_packet;
-                disconnect_packet << static_cast<sf::Int32>(Server::PacketType::kPlayerDisconnect);
-                disconnect_packet << id;
-                SendToAll(disconnect_packet);
-
-                // Remove aircraft info
-                m_aircraft_info.erase(id);
-
-                // Remove ready flag
-                m_players_ready.erase(id);
+                SendToAll((sf::Packet() << static_cast<sf::Int32>(Server::PacketType::kPlayerDisconnect) << identifer));
+                m_aircraft_info.erase(identifer);
             }
 
-            m_aircraft_count -= peer->m_aircraft_identifiers.size();
             m_connected_players--;
+            m_aircraft_count -= (*itr)->m_aircraft_identifiers.size();
 
-            // Erase peer
             itr = m_peers.erase(itr);
 
-            // Reopen listener if game hasn't started and room available
-            if (!m_game_started && m_connected_players < m_max_connected_players)
+            //If the number of peers has dropped below max_connections
+            if (m_connected_players < m_max_connected_players)
             {
                 m_peers.emplace_back(PeerPtr(new RemotePeer()));
                 SetListening(true);
             }
 
-            BroadcastMessage("A player has disconnected.");
+            BroadcastMessage("A player has disconnected");
+
         }
         else
         {
             ++itr;
         }
     }
+
 }
 
 

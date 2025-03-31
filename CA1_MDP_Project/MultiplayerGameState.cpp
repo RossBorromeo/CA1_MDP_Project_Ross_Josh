@@ -91,73 +91,125 @@ void MultiplayerGameState::Draw()
 
 bool MultiplayerGameState::Update(sf::Time dt)
 {
+	//Connected to the Server: Handle all the network logic
 	if (m_connected)
 	{
-		if (m_game_started)
-			m_world.Update(dt);
+		m_world.Update(dt);
 
-		
+		//Remove players whose aircraft were destroyed
+		bool found_local_plane = false;
+		for (auto itr = m_players.begin(); itr != m_players.end();)
+		{
+			//Check if there are no more local planes for remote clients
+			if (std::find(m_local_player_identifiers.begin(), m_local_player_identifiers.end(), itr->first) != m_local_player_identifiers.end())
+			{
+				found_local_plane = true;
+			}
 
-		// Receive network packet
+			if (!m_world.GetAircraft(itr->first))
+			{
+				itr = m_players.erase(itr);
+
+				//No more players left : Mission failed
+				if (m_players.empty())
+				{
+					RequestStackPush(StateID::kGameOver);
+				}
+			}
+			else
+			{
+				++itr;
+			}
+		}
+
+		if (!found_local_plane && m_game_started)
+		{
+			RequestStackPush(StateID::kGameOver);
+		}
+
+		//Only handle the realtime input if the window has focus and the game is unpaused
+		if (m_active_state && m_has_focus)
+		{
+			CommandQueue& commands = m_world.GetCommandQueue();
+			for (auto& pair : m_players)
+			{
+				pair.second->HandleRealtimeInput(commands);
+			}
+		}
+
+		//Always handle the network input
+		CommandQueue& commands = m_world.GetCommandQueue();
+		for (auto& pair : m_players)
+		{
+			pair.second->HandleRealtimeNetworkInput(commands);
+		}
+
+		//Handle messages from the server that may have arrived
 		sf::Packet packet;
 		if (m_socket.receive(packet) == sf::Socket::Done)
 		{
-			std::cout << "[Multiplayer] Packet received.\n";
 			m_time_since_last_packet = sf::seconds(0.f);
 			sf::Int32 packet_type;
 			packet >> packet_type;
 			HandlePacket(packet_type, packet);
 		}
-		else if (m_time_since_last_packet > m_client_timeout)
+		else
 		{
-			std::cerr << "[Multiplayer] Connection timeout. Disconnecting.\n";
-			m_connected = false;
-			m_failed_connection_text.setString("Lost connection to server");
-			Utility::CentreOrigin(m_failed_connection_text);
-			m_failed_connection_clock.restart();
+			//Check for timeout with the server
+			if (m_time_since_last_packet > m_client_timeout)
+			{
+				m_connected = false;
+				m_failed_connection_text.setString("Lost connection to the server");
+				Utility::CentreOrigin(m_failed_connection_text);
+
+				m_failed_connection_clock.restart();
+			}
 		}
 
-		if (m_socket.receive(packet) == sf::Socket::Done)
-{
-    std::cout << "[Multiplayer] Packet received.\n";
-    m_time_since_last_packet = sf::seconds(0.f);
-    sf::Int32 packet_type;
-    packet >> packet_type;
-    HandlePacket(packet_type, packet);
-}
-else if (m_time_since_last_packet > m_client_timeout)
-{
-    std::cerr << "[Multiplayer] Connection timeout. Disconnecting.\n";
-    m_connected = false;
-    m_failed_connection_text.setString("Lost connection to server");
-    Utility::CentreOrigin(m_failed_connection_text);
-    m_failed_connection_clock.restart();
-}
+		UpdateBroadcastMessage(dt);
 
-		// Send state
+		//Time counter fro blinking second player text
+		m_player_invitation_time += dt;
+		if (m_player_invitation_time > sf::seconds(1.f))
+		{
+			m_player_invitation_time = sf::Time::Zero;
+		}
+
+		//Events occurring in the game
+		GameActions::Action game_action;
+		while (m_world.PollGameAction(game_action))
+		{
+			sf::Packet packet;
+			packet << static_cast<sf::Int32>(Client::PacketType::kGameEvent);
+			packet << static_cast<sf::Int32>(game_action.type);
+			packet << game_action.position.x;
+			packet << game_action.position.y;
+
+			m_socket.send(packet);
+		}
+
+		//Regular position updates
 		if (m_tick_clock.getElapsedTime() > sf::seconds(1.f / TICK_RATE))
 		{
-			sf::Packet state;
-			state << static_cast<sf::Int32>(Client::PacketType::kStateUpdate);
-			state << static_cast<sf::Int32>(m_local_player_identifiers.size());
+			sf::Packet position_update_packet;
+			position_update_packet << static_cast<sf::Int32>(Client::PacketType::kStateUpdate);
+			position_update_packet << static_cast<sf::Int32>(m_local_player_identifiers.size());
 
-			for (auto id : m_local_player_identifiers)
+			for (sf::Int32 identifier : m_local_player_identifiers)
 			{
-				if (Aircraft* a = m_world.GetAircraft(id))
+				if (Aircraft* aircraft = m_world.GetAircraft(identifier))
 				{
-					state << id << a->getPosition().x << a->getPosition().y
-						<< static_cast<sf::Int32>(a->GetHitPoints())
-						<< static_cast<sf::Int32>(a->GetMissileAmmo());
+					position_update_packet << identifier << aircraft->getPosition().x << aircraft->getPosition().y << static_cast<sf::Int32>(aircraft->GetHitPoints()) << static_cast<sf::Int32>(aircraft->GetMissileAmmo());
 				}
 			}
-			m_socket.send(state);
+			m_socket.send(position_update_packet);
 			m_tick_clock.restart();
 		}
-
 		m_time_since_last_packet += dt;
-		UpdateBroadcastMessage(dt);
 	}
-	else if (m_failed_connection_clock.getElapsedTime() > sf::seconds(5.f))
+
+	//Failed to connect and waited for more than 5 seconds: Back to menu
+	else if (m_failed_connection_clock.getElapsedTime() >= sf::seconds(5.f))
 	{
 		RequestStackClear();
 		RequestStackPush(StateID::kMenu);
@@ -173,12 +225,9 @@ bool MultiplayerGameState::HandleEvent(const sf::Event& event)
 		pair.second->HandleEvent(event, commands);
 	}
 		
-
-
-
 	if (event.type == sf::Event::KeyPressed)
 	{
-		// Enter: Ready logic (already there)
+	
 		if (event.key.code == sf::Keyboard::Return && m_connected && !m_game_started && !m_local_ready)
 		{
 			sf::Packet packet;
@@ -190,23 +239,13 @@ bool MultiplayerGameState::HandleEvent(const sf::Event& event)
 			std::cout << "[Multiplayer] Sent ReadyNotice with ID: " << m_identifier << "\n";
 		}
 
-		// Host shortcut (already there)
-		if (m_host && event.key.code == sf::Keyboard::Return && !m_game_started && !m_local_ready)
-		{
-			sf::Packet packet;
-			packet << static_cast<sf::Int32>(Client::PacketType::kReadyNotice);
-			packet << m_identifier;
-			m_socket.send(packet);
-			m_local_ready = true;
+		
 
-			std::cout << "[Host] Host player sent ReadyNotice with ID: " << m_identifier << "\n";
-		}
-
-		//  ADD THIS: Pause Menu
+		
 		if (event.key.code == sf::Keyboard::Escape && m_game_started)
 		{
 			std::cout << "[Multiplayer] Pause triggered\n";
-			RequestStackPush(StateID::kPause);  // Or use kNetworkPause if you have that too
+			RequestStackPush(StateID::kNetworkPause);  
 		}
 
 
@@ -227,11 +266,20 @@ void MultiplayerGameState::OnDestroy()
 	}
 }
 
-void MultiplayerGameState::UpdateBroadcastMessage(sf::Time dt)
+void MultiplayerGameState::DisableAllRealtimeActions()
+{
+	m_active_state = false;
+	for (sf::Int32 identifier : m_local_player_identifiers)
+	{
+		m_players[identifier]->DisableAllRealtimeActions();
+	}
+}
+
+void MultiplayerGameState::UpdateBroadcastMessage(sf::Time elapsed_time)
 {
 	if (m_broadcasts.empty()) return;
 
-	m_broadcast_elapsed_time += dt;
+	m_broadcast_elapsed_time += elapsed_time;
 	if (m_broadcast_elapsed_time > sf::seconds(2.f))
 	{
 		m_broadcasts.erase(m_broadcasts.begin());
@@ -253,65 +301,88 @@ void MultiplayerGameState::HandlePacket(sf::Int32 type, sf::Packet& packet)
 		std::string message;
 		packet >> message;
 		m_broadcasts.push_back(message);
+
+
 		if (m_broadcasts.size() == 1)
 		{
-			m_broadcast_text.setString(message);
+			m_broadcast_text.setString(m_broadcasts.front());
 			Utility::CentreOrigin(m_broadcast_text);
 			m_broadcast_elapsed_time = sf::Time::Zero;
 		}
-		break;
+		
 	}
+	break;
 	case Server::PacketType::kSpawnSelf:
 	{
-		packet >> m_identifier;
-		sf::Vector2f pos;
-		packet >> pos.x >> pos.y;
-
-		std::cout << "[Multiplayer] Spawning local aircraft with ID: " << m_identifier
-			<< " at position (" << pos.x << ", " << pos.y << ")\n";
-
-		auto* aircraft = m_world.AddAircraft(m_identifier);
-		aircraft->setPosition(pos);
-
-		// Center the camera on the aircraft
-		sf::View view = GetContext().window->getDefaultView();
-		view.setCenter(pos);
-		GetContext().window->setView(view);
-
-		m_players[m_identifier] = std::make_unique<Player>(&m_socket, m_identifier, GetContext().keys1);
-		m_local_player_identifiers.push_back(m_identifier);
-		break;
+		sf::Int32 aircraft_identifier;
+		sf::Vector2f aircraft_position;
+		packet >> aircraft_identifier >> aircraft_position.x >> aircraft_position.y;
+		Aircraft* aircraft = m_world.AddAircraft(aircraft_identifier);
+		aircraft->setPosition(aircraft_position);
+		m_players[aircraft_identifier].reset(new Player(&m_socket, aircraft_identifier, GetContext().keys1));
+		m_local_player_identifiers.push_back(aircraft_identifier);
+		m_game_started = true;
 	}
+	break;
 
+	case Server::PacketType::kPlayerConnect:
+	{
+		sf::Int32 aircraft_identifier;
+		sf::Vector2f aircraft_position;
+		packet >> aircraft_identifier >> aircraft_position.x >> aircraft_position.y;
+
+		Aircraft* aircraft = m_world.AddAircraft(aircraft_identifier);
+		aircraft->setPosition(aircraft_position);
+		m_players[aircraft_identifier].reset(new Player(&m_socket, aircraft_identifier, nullptr));
+	}
+	break;
 
 
 	case Server::PacketType::kInitialState:
 	{
-		sf::Int32 count;
-		packet >> m_world_height >> m_scroll_position >> count;
+		sf::Int32 aircraft_count;
+		float world_height, current_scroll;
+		packet >> world_height >> current_scroll;
 
-		for (sf::Int32 i = 0; i < count; ++i)
+		m_world.SetWorldHeight(world_height);
+		m_world.SetCurrentBattleFieldPosition(current_scroll);
+		packet >> aircraft_count;
+
+		for (sf::Int32 i = 0; i < aircraft_count; ++i)
 		{
-			sf::Int32 id, hp, ammo;
-			sf::Vector2f pos;
-			packet >> id >> pos.x >> pos.y >> hp >> ammo;
+			sf::Int32 aircraft_identifier;
+			sf::Int32 hitpoints;
+			sf::Int32 missile_ammo;
+			sf::Vector2f aircraft_position;
+			packet >> aircraft_identifier >> aircraft_position.x >> aircraft_position.y >> hitpoints >> missile_ammo;
 
-			auto* aircraft = m_world.AddAircraft(id);
-			aircraft->setPosition(pos);
-			aircraft->SetHitpoints(hp);
-			aircraft->SetMissileAmmo(ammo);
+			Aircraft* aircraft = m_world.AddAircraft(aircraft_identifier);
+			aircraft->setPosition(aircraft_position);
+			aircraft->SetHitpoints(hitpoints);
+			aircraft->SetMissileAmmo(missile_ammo);
 
-			m_players[id] = std::make_unique<Player>(&m_socket, id, nullptr);
+			m_players[aircraft_identifier].reset(new Player(&m_socket, aircraft_identifier, nullptr));
 		}
-		break;
+		
+		
 	}
+	break;
+
 	case Server::PacketType::kPlayerEvent:
 	{
-		sf::Int32 id, action;
-		packet >> id >> action;
-		m_players[id]->HandleNetworkEvent(static_cast<Action>(action), m_world.GetCommandQueue());
-		break;
+		sf::Int32 aircraft_identifier;
+		sf::Int32 action;
+		packet >> aircraft_identifier >> action;
+
+		auto itr = m_players.find(aircraft_identifier);
+		if (itr != m_players.end())
+		{
+			itr->second->HandleNetworkEvent(static_cast<Action>(action), m_world.GetCommandQueue());
+		}
 	}
+
+	break;
+
 	case Server::PacketType::kPlayerRealtimeChange:
 	{
 		sf::Int32 aircraft_identifier;
@@ -324,55 +395,91 @@ void MultiplayerGameState::HandlePacket(sf::Int32 type, sf::Packet& packet)
 		{
 			itr->second->HandleNetworkRealtimeChange(static_cast<Action>(action), action_enabled);
 		}
-		break;
+		
 	}
+	break;
+
 	case Server::PacketType::kPlayerDisconnect:
 	{
 		sf::Int32 id;
 		packet >> id;
 		m_world.RemoveAircraft(id);
 		m_players.erase(id);
-		break;
+		
 	}
-	case Server::PacketType::kGameReady:
-		m_game_started = true;
+	break;
 
-		// Center camera on local player
-		if (!m_local_player_identifiers.empty())
-		{
-			if (Aircraft* aircraft = m_world.GetAircraft(m_local_player_identifiers.front()))
+	case Server::PacketType::kGameReady:
+	{
+		m_game_started = true;
+		m_broadcasts.clear(); 
+
+			// Center camera on local player
+			if (!m_local_player_identifiers.empty())
 			{
-				sf::Vector2f pos = aircraft->getPosition();
-				GetContext().window->setView(sf::View(
-					sf::FloatRect(pos.x - 960.f, pos.y - 540.f, 1920.f, 1080.f)
-				));
-				std::cout << "[Multiplayer] Centering camera on Aircraft ID " << aircraft->GetIdentifier() << " at " << pos.x << ", " << pos.y << "\n";
+				if (Aircraft* aircraft = m_world.GetAircraft(m_local_player_identifiers.front()))
+				{
+					sf::Vector2f pos = aircraft->getPosition();
+					GetContext().window->setView(sf::View(
+						sf::FloatRect(pos.x - 960.f, pos.y - 540.f, 1920.f, 1080.f)
+					));
+					std::cout << "[Multiplayer] Centering camera on Aircraft ID " << aircraft->GetIdentifier() << " at " << pos.x << ", " << pos.y << "\n";
+				}
 			}
-		}
-		break;
+	}
+	break;
+
+
+
+	case Server::PacketType::kSpawnEnemy:
+	{
+		float height;
+		sf::Int32 type;
+		float relative_x;
+		packet >> type >> height >> relative_x;
+
+		m_world.AddEnemy(static_cast<AircraftType>(type), relative_x, height);
+		m_world.SortEnemies();
+	}
+	break;
+
+	case Server::PacketType::kMissionSuccess:
+	{
+		RequestStackPush(StateID::kMissionSuccess);
+	}
+	break;
+
+
 	case Server::PacketType::kUpdateClientState:
 	{
-		float battlefield_position;
+		float current_world_position;
 		sf::Int32 aircraft_count;
-		packet >> battlefield_position >> aircraft_count;
+		packet >> current_world_position >> aircraft_count;
 
-		m_world.SetWorldScrollCompensation(m_world.GetViewBounds().top + m_world.GetViewBounds().height / battlefield_position);
+		float current_view_position = m_world.GetViewBounds().top + m_world.GetViewBounds().height;
+
+		//Set the world's scroll compensation according to whether the view is behind or ahead
+		m_world.SetWorldScrollCompensation(current_view_position / current_world_position);
+
 
 		for (sf::Int32 i = 0; i < aircraft_count; ++i)
 		{
-			sf::Int32 id, hp, ammo;
-			sf::Vector2f pos;
-			packet >> id >> pos.x >> pos.y >> hp >> ammo;
+			sf::Vector2f aircraft_position;
+			sf::Int32 aircraft_identifier;
+			sf::Int32 hitpoints;
+			sf::Int32 ammo;
+			packet >> aircraft_identifier >> aircraft_position.x >> aircraft_position.y >> hitpoints >> ammo;
 
-			Aircraft* aircraft = m_world.GetAircraft(id);
-			if (aircraft && std::find(m_local_player_identifiers.begin(), m_local_player_identifiers.end(), id) == m_local_player_identifiers.end())
+			Aircraft* aircraft = m_world.GetAircraft(aircraft_identifier);
+			bool is_local_plane = std::find(m_local_player_identifiers.begin(), m_local_player_identifiers.end(), aircraft_identifier) != m_local_player_identifiers.end();
+			if (aircraft && !is_local_plane)
 			{
-				// Interpolate position if not local
-				sf::Vector2f interpolated = aircraft->getPosition() + (pos - aircraft->getPosition()) * 0.1f;
-				aircraft->setPosition(interpolated);
-				aircraft->SetHitpoints(hp);
+				sf::Vector2f interpolated_position = aircraft->getPosition() + (aircraft_position - aircraft->getPosition()) * 0.1f;
+				aircraft->setPosition(interpolated_position);
+				aircraft->SetHitpoints(hitpoints);
 				aircraft->SetMissileAmmo(ammo);
 			}
+
 		}
 	}
 	break;

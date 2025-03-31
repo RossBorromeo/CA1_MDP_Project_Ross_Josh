@@ -146,17 +146,20 @@ void Player::HandleRealtimeInput(CommandQueue& commands)
     }
 }
 
-void Player::HandleRealtimeInput(CommandQueue& commands)
+void Player::HandleRealtimeNetworkInput(CommandQueue& commands)
 {
-    // Check if this is a networked game and local player or just a single player game
-    if ((m_socket && IsLocal()) || !m_socket)
+    if (m_socket && !IsLocal())
     {
-        // Lookup all actions and push corresponding commands to queue
-        std::vector<Action> activeActions = m_key_binding->GetRealtimeActions();
-        for (Action action : activeActions)
-            commands.Push(m_action_binding[action]);
+        // Traverse all realtime input proxies. Because this is a networked game, the input isn't handled directly
+        for (auto pair : m_action_proxies)
+        {
+            if (pair.second && IsRealtimeAction(pair.first))
+                commands.Push(m_action_binding[pair.first]);
+        }
     }
 }
+
+
 
 void Player::HandleNetworkEvent(Action action, CommandQueue& commands)
 {

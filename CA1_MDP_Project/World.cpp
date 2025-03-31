@@ -56,38 +56,30 @@ void World::Update(sf::Time dt)
 	SpawnEnemies();
 	m_camera.move(0, m_scrollspeed * dt.asSeconds());
 
-
-	for (Aircraft* aircraft : m_player_aircraft)
-
-	{
-		aircraft->SetVelocity(0.f, 0.f);
-	}
-
-	DestroyEntitiesOutsideView();
-	GuideMissiles();
-
+	// 1. Process commands FIRST
 	while (!m_command_queue.IsEmpty())
 		m_scenegraph.OnCommand(m_command_queue.Pop(), dt);
 
+	// 2. THEN zero velocity AFTER command application
+	for (Aircraft* aircraft : m_player_aircraft)
+		aircraft->SetVelocity(0.f, 0.f);
 
-
+	DestroyEntitiesOutsideView();
+	GuideMissiles();
 	AdaptPlayerVelocity();
 	HandleCollisions();
 
 	auto first_to_remove = std::remove_if(
-	m_player_aircraft.begin(), m_player_aircraft.end(),
-	std::mem_fn(&Aircraft::IsMarkedForRemoval));
+		m_player_aircraft.begin(), m_player_aircraft.end(),
+		std::mem_fn(&Aircraft::IsMarkedForRemoval));
 	m_player_aircraft.erase(first_to_remove, m_player_aircraft.end());
 
 	m_scenegraph.RemoveWrecks();
 	m_scenegraph.Update(dt, m_command_queue);
 	AdaptPlayerPosition();
-	UpdateBackground(dt.asSeconds());
 	UpdateSounds();
-
-
-	
 }
+
 
 void World::Draw()
 {
