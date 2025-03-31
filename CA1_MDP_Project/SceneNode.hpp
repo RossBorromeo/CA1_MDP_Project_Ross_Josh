@@ -40,6 +40,8 @@ public:
 	void RemoveWrecks();
 	virtual unsigned int GetCategory() const;
 
+	virtual void UpdateCurrent(sf::Time dt);
+
 private:
 	virtual void UpdateCurrent(sf::Time dt, CommandQueue& commands);
 	void UpdateChildren(sf::Time dt, CommandQueue& commands);

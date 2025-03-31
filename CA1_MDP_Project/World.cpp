@@ -198,8 +198,7 @@ void World::LoadTextures()
 
 void World::BuildScene()
 {
-	
-	//Initialize the different layers
+	// Initialize the different layers
 	for (std::size_t i = 0; i < NumSceneLayers; ++i)
 	{
 		ReceiverCategories category = (i == static_cast<int>(SceneLayers::kLowerAir)) ? ReceiverCategories::kScene : ReceiverCategories::kNone;
@@ -212,29 +211,18 @@ void World::BuildScene()
 	sf::Texture& texture = m_textures.Get(TextureID::kSpace);
 	texture.setRepeated(true); // Ensure the texture repeats
 
-	// Set the texture rect to match the entire world size
+	// Set the texture rect to match the entire world height
 	sf::IntRect textureRect(0, 0, static_cast<int>(m_world_bounds.width), static_cast<int>(m_world_bounds.height));
 
-	// Create the first background sprite
-	std::unique_ptr<SpriteNode> background_sprite1 = std::make_unique<SpriteNode>(texture, textureRect);
-	background_sprite1->setPosition(m_world_bounds.left, m_world_bounds.top);
+	// Create the scrolling background sprite
+	std::unique_ptr<SpriteNode> background_sprite = std::make_unique<SpriteNode>(texture, textureRect);
+	background_sprite->setPosition(m_world_bounds.left, m_world_bounds.top);
+	background_sprite->SetVelocity(0.f, m_scrollspeed); // Moves with the world
 
-	// Create the second background sprite (placed exactly below the first)
-	std::unique_ptr<SpriteNode> background_sprite2 = std::make_unique<SpriteNode>(texture, textureRect);
-	background_sprite2->setPosition(m_world_bounds.left, m_world_bounds.top + m_world_bounds.height);
+	// Attach to background layer
+	m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->AttachChild(std::move(background_sprite));
 
-	// Attach both to scene
-	m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->AttachChild(std::move(background_sprite1));
-	m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->AttachChild(std::move(background_sprite2));
-
-	////Add the finish line
-	//sf::Texture& finish_texture = m_textures.Get(TextureID::kFinishLine);
-	//std::unique_ptr<SpriteNode> finish_sprite(new SpriteNode(finish_texture));
-	//finish_sprite->setPosition(0.f, -76.f);
-	//m_finish_sprite = finish_sprite.get();
-	//m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->AttachChild(std::move(finish_sprite));
-
-	//Add the particle nodes to the scene
+	// Add particle nodes (for visual effects)
 	std::unique_ptr<ParticleNode> smokeNode(new ParticleNode(ParticleType::kSmoke, m_textures));
 	m_scene_layers[static_cast<int>(SceneLayers::kLowerAir)]->AttachChild(std::move(smokeNode));
 
@@ -245,14 +233,6 @@ void World::BuildScene()
 	std::unique_ptr<SoundNode> soundNode(new SoundNode(m_sounds));
 	m_scenegraph.AttachChild(std::move(soundNode));
 
-	/*std::unique_ptr<Aircraft> left_escort(new Aircraft(AircraftType::kMeteor, m_textures, m_fonts));
-	left_escort->setPosition(-80.f, 50.f);
-	m_player_aircraft1->AttachChild(std::move(left_escort));
-
-	std::unique_ptr<Aircraft> right_escort(new Aircraft(AircraftType::kMeteor, m_textures, m_fonts));
-	right_escort->setPosition(80.f, 50.f);
-	m_player_aircraft1->AttachChild(std::move(right_escort));*/
-
 	if (m_networked_world)
 	{
 		std::unique_ptr<NetworkNode> network_node(new NetworkNode());
@@ -260,11 +240,10 @@ void World::BuildScene()
 		m_scenegraph.AttachChild(std::move(network_node));
 	}
 
+	// Add enemies
 	AddEnemies();
-
-
-	
 }
+
 
 
 void World::AdaptPlayerPosition() 
