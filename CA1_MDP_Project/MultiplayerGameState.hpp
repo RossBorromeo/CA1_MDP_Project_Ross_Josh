@@ -46,6 +46,8 @@ private:
 	sf::Text m_failed_connection_text;
 	sf::Clock m_failed_connection_clock;
 
+	sf::Text m_player_id_text;
+
 	bool m_active_state;
 	bool m_has_focus;
 	bool m_host;

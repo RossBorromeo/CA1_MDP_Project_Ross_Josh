@@ -8,6 +8,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 sf::IpAddress GetAddressFromFile()
 {
@@ -38,9 +39,17 @@ MultiplayerGameState::MultiplayerGameState(StateStack& stack, Context context, b
 	, m_local_ready(false)
 	, m_ready_players(0)
 	, m_identifier(-1) 
+	
 {
 	m_broadcast_text.setFont(context.fonts->Get(Font::kMain));
 	m_broadcast_text.setPosition(1024.f / 2, 100.f);
+
+	m_player_id_text.setFont(context.fonts->Get(Font::kMain));
+	m_player_id_text.setCharacterSize(30);
+	m_player_id_text.setFillColor(sf::Color::White);
+	m_player_id_text.setString("Your Player ID: ???");
+	m_player_id_text.setPosition(1024.f / 2.f, 140.f); // Below the broadcast text
+	Utility::CentreOrigin(m_player_id_text);
 
 	m_failed_connection_text.setFont(context.fonts->Get(Font::kMain));
 	m_failed_connection_text.setCharacterSize(35);
@@ -77,6 +86,9 @@ void MultiplayerGameState::Draw()
 
 		if (!m_broadcasts.empty())
 			m_window.draw(m_broadcast_text);
+
+		if (!m_game_started)
+			m_window.draw(m_player_id_text);
 
 		if (m_local_player_identifiers.size() < 2 && m_player_invitation_time < sf::seconds(0.5f))
 		{
@@ -300,6 +312,12 @@ void MultiplayerGameState::HandlePacket(sf::Int32 type, sf::Packet& packet)
 		sf::Vector2f aircraft_position;
 		packet >> aircraft_identifier >> aircraft_position.x >> aircraft_position.y;
 		m_identifier = aircraft_identifier;
+
+		std::stringstream ss;
+		ss << "Your Player ID: " << m_identifier;
+		m_player_id_text.setString(ss.str());
+		Utility::CentreOrigin(m_player_id_text);
+
 		Aircraft* aircraft = m_world.AddAircraft(aircraft_identifier);
 		aircraft->setPosition(aircraft_position);
 		m_players[aircraft_identifier].reset(new Player(&m_socket, aircraft_identifier, GetContext().keys1));
