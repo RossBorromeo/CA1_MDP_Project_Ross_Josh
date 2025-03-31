@@ -22,6 +22,10 @@ private:
 	void RegisterStates();
 
 private:
+	sf::View m_view; 
+
+
+private:
 	sf::RenderWindow m_window;
 
 	TextureHolder m_textures;
