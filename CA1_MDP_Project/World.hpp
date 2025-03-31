@@ -63,7 +63,7 @@ private:
 	void GuideMissiles();
 
 	void HandleCollisions();
-	void UpdateBackground(float deltaTime);
+	//void UpdateBackground(float deltaTime);
 	void UpdateSounds();
 
 private:

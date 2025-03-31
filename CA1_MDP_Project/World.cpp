@@ -5,7 +5,6 @@
 #include "SoundNode.hpp"
 #include "SpriteNode.hpp"
 #include <iostream>
-#include "DataTables.hpp"
 
 
 World::World(sf::RenderTarget& output_target, FontHolder& font, SoundPlayer& sounds, bool networked)
@@ -16,7 +15,7 @@ World::World(sf::RenderTarget& output_target, FontHolder& font, SoundPlayer& sou
 	, m_sounds(sounds)
 	, m_scenegraph(ReceiverCategories::kNone)
 	, m_scene_layers()
-	, m_world_bounds(0.f, 0.f, m_camera.getSize().x, 15.f * 60.f * std::abs(m_scrollspeed))
+	, m_world_bounds(0.f, 0.f, m_camera.getSize().x, 3000.f)
 	, m_spawn_position(m_camera.getSize().x / 2.f, m_world_bounds.height - m_camera.getSize().y / 2.f)
 	, m_scrollspeed(-50.f)
 	, m_player_aircraft()
@@ -47,7 +46,7 @@ void World::SetWorldScrollCompensation(float compensation)
 
 void World::Update(sf::Time dt)
 {
-	UpdateBackground(dt.asSeconds());
+	//UpdateBackground(dt.asSeconds());
 	m_spawn_timer += dt;
 	if (m_spawn_timer >= m_spawn_interval)
 	{
@@ -55,8 +54,13 @@ void World::Update(sf::Time dt)
 		m_spawn_timer = sf::Time::Zero;
 	}
 
-
 	m_camera.move(0, m_scrollspeed * dt.asSeconds());
+
+	if (m_camera.getCenter().y <= 0.f)
+	{
+		m_camera.setCenter(m_camera.getCenter().x, m_world_bounds.height);
+	}
+	
 	// 2. THEN zero velocity AFTER command application
 	for (Aircraft* aircraft : m_player_aircraft)
 		aircraft->SetVelocity(0.f, 0.f);
@@ -102,8 +106,6 @@ void World::Draw()
 		m_target.setView(m_camera);
 		m_target.draw(m_scenegraph);
 	}
-
-	
 }
 
 
@@ -135,7 +137,6 @@ Aircraft* World::AddAircraft(int identifier)
 	std::unique_ptr<Aircraft> player(new Aircraft(AircraftType::kBattleShip, m_textures, m_fonts));
 	player->setPosition(m_camera.getCenter());
 	player->SetIdentifier(identifier);
-	player->SetRespawnPosition(player->getPosition());
 
 	m_player_aircraft.emplace_back(player.get());
 	m_scene_layers[static_cast<int>(SceneLayers::kUpperAir)]->AttachChild(std::move(player));
@@ -154,11 +155,10 @@ void World::SetCurrentBattleFieldPosition(float lineY)
 	m_spawn_position.y = m_world_bounds.height;
 }
 
-void World::SetWorldHeight(float scrollspeed)
+void World::SetWorldHeight(float height)
 {
-	m_world_bounds.height = 15.f * 60.f * std::abs(scrollspeed);
+	m_world_bounds.height = height;
 }
-
 
 CommandQueue& World::GetCommandQueue()
 {
@@ -179,11 +179,6 @@ bool World::HasAlivePlayer() const
 //	}
 //	return false;
 //}
-
-
-
-
-
 
 //void World::CreatePickup(sf::Vector2f position, PickupType type)
 //{
@@ -218,7 +213,7 @@ void World::LoadTextures()
 
 void World::BuildScene()
 {
-	//Initialize the different layers
+	// Initialize the different layers
 	for (std::size_t i = 0; i < static_cast<int>(SceneLayers::kLayerCount); ++i)
 	{
 		ReceiverCategories category = (i == static_cast<int>(SceneLayers::kLowerAir)) ? ReceiverCategories::kScene : ReceiverCategories::kNone;
@@ -227,19 +222,14 @@ void World::BuildScene()
 		m_scenegraph.AttachChild(std::move(layer));
 	}
 
-	// Get the texture
+	// Prepare the background
 	sf::Texture& texture = m_textures.Get(TextureID::kSpace);
-	texture.setRepeated(true); // Ensure the texture repeats
+	sf::IntRect textureRect(m_world_bounds);
+	texture.setRepeated(true);
 
-	// Set the texture rect to match the entire world height
-	sf::IntRect textureRect(0, 0, static_cast<int>(m_world_bounds.width), static_cast<int>(m_world_bounds.height));
-
-	// Create the scrolling background sprite
-	std::unique_ptr<SpriteNode> background_sprite = std::make_unique<SpriteNode>(texture, textureRect);
+	// Add the background sprite to the world
+	std::unique_ptr<SpriteNode> background_sprite(new SpriteNode(texture, textureRect));
 	background_sprite->setPosition(m_world_bounds.left, m_world_bounds.top);
-	background_sprite->SetVelocity(0.f, m_scrollspeed); // Moves with the world
-
-	// Attach to background layer
 	m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->AttachChild(std::move(background_sprite));
 
 	// Add particle nodes (for visual effects)
@@ -285,11 +275,6 @@ void World::AdaptPlayerPosition()
 
 
 }
-
-
-
-
-
 
 void World::AdaptPlayerVelocity() //changed by Josh added in secondary player functionality
 {
@@ -523,13 +508,11 @@ void World::HandleCollisions()
 
 			if (!player.IsInvincible())
 			{
-				int base_damage = 10;
-				if (enemy.GetType() == AircraftType::kAvenger)
-					base_damage = 25; //  More damage from Avenger!
-
-				player.Damage(base_damage);
+				player.Damage(10);
 				player.StartInvincibility();
-				player.setPosition(player.GetRespawnPosition());
+
+				// Use aircraft's own saved respawn position
+				player.setPosition(player.GetRespawnPosition()); // Set different spawn position
 			}
 
 			enemy.Destroy();
@@ -556,23 +539,23 @@ void World::HandleCollisions()
 	}
 }
 
-void World::UpdateBackground(float deltaTime)
-{
-	const float scrollSpeed = 15.0f; // Adjust based on your game speed
-
-	for (auto& background : m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->GetChildren())
-	{
-		// Move the background downward
-		background->move(0, scrollSpeed * deltaTime);
-
-		// Check if the background has moved completely out of view
-		if (background->getPosition().y >= m_world_bounds.height)
-		{
-			// Reset its position to the top
-			background->move(0, -2 * m_world_bounds.height);
-		}
-	}
-}
+//void World::UpdateBackground(float deltaTime)
+//{
+//	const float scrollSpeed = 15.0f; // Adjust based on your game speed
+//
+//	for (auto& background : m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->GetChildren())
+//	{
+//		// Move the background downward
+//		background->move(0, scrollSpeed * deltaTime);
+//
+//		// Check if the background has moved completely out of view
+//		if (background->getPosition().y >= m_world_bounds.height)
+//		{
+//			// Reset its position to the top
+//			background->move(0, -2 * m_world_bounds.height);
+//		}
+//	}
+//}
 
 
 void World::UpdateSounds()
