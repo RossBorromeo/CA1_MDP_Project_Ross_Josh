@@ -5,6 +5,7 @@
 #include "GameServer.hpp"
 #include "NetworkProtocol.hpp"
 
+
 class MultiplayerGameState : public State
 {
 public:

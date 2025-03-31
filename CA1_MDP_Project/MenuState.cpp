@@ -34,6 +34,7 @@ MenuState::MenuState(StateStack& stack, Context context)
     host_button->SetText("Host");
     host_button->SetCallback([this]()
         {
+            RequestStackClear(); // removes MenuState
             RequestStackPush(StateID::kHostGame);
         });
 
@@ -42,6 +43,7 @@ MenuState::MenuState(StateStack& stack, Context context)
     join_button->SetText("Join");
     join_button->SetCallback([this]()
         {
+			RequestStackClear(); // removes MenuState
             RequestStackPush(StateID::kJoinGame);
         });
 

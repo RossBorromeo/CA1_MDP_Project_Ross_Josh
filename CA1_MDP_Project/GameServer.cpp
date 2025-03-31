@@ -6,6 +6,8 @@
 #include "PickupType.hpp"
 #include "AircraftType.hpp"
 
+#include <iostream>
+
 GameServer::GameServer(sf::Vector2f battlefield_size)
     : m_thread(&GameServer::ExecutionThread, this)
     , m_listening_state(false)
@@ -84,6 +86,28 @@ void GameServer::SetListening(bool enable)
 void GameServer::ExecutionThread()
 {
     SetListening(true);
+
+    // Self-spawn for host
+    m_aircraft_info[m_aircraft_identifier_counter].m_position = sf::Vector2f(m_battlefield_rect.width / 2.f, m_battlefield_rect.top + m_battlefield_rect.height / 2.f);
+    m_aircraft_info[m_aircraft_identifier_counter].m_hitpoints = 100;
+    m_aircraft_info[m_aircraft_identifier_counter].m_missile_ammo = 2;
+    m_peers[0]->m_aircraft_identifiers.emplace_back(m_aircraft_identifier_counter);
+
+    // Build spawn packet and send to host
+    sf::Packet self_spawn;
+    self_spawn << static_cast<sf::Int32>(Server::PacketType::kSpawnSelf);
+    self_spawn << m_aircraft_identifier_counter;
+    self_spawn << m_aircraft_info[m_aircraft_identifier_counter].m_position.x;
+    self_spawn << m_aircraft_info[m_aircraft_identifier_counter].m_position.y;
+
+    m_peers[0]->m_socket.send(self_spawn);
+    m_peers[0]->m_ready = true;
+    m_peers[0]->m_last_packet_time = Now();
+
+    m_aircraft_count++;
+    m_connected_players++;
+    m_aircraft_identifier_counter++;
+
 
     sf::Time frame_rate = sf::seconds(1.f / 60.f);
     sf::Time tick_rate = sf::seconds(1.f / 20.f);
@@ -348,7 +372,7 @@ void GameServer::HandleIncomingPackets(sf::Packet& packet, RemotePeer& receiving
     }
     break;
 
-    case Client::PacketType::kGameEvent:
+    case Client::PacketType::kGameEvent: 
     {
         sf::Int32 action;
         float x;
@@ -375,14 +399,20 @@ void GameServer::HandleIncomingPackets(sf::Packet& packet, RemotePeer& receiving
 void GameServer::HandleIncomingConnections()
 {
     if (!m_listening_state)
-    {
         return;
-    }
+
+    //  Ensure the slot exists before accessing it
+    if (m_connected_players >= m_peers.size())
+        m_peers.emplace_back(std::make_unique<RemotePeer>());
 
     if (m_listener_socket.accept(m_peers[m_connected_players]->m_socket) == sf::TcpListener::Done)
     {
-        //Order the new client to spawn its player 1
-        m_aircraft_info[m_aircraft_identifier_counter].m_position = sf::Vector2f(m_battlefield_rect.width / 2, m_battlefield_rect.top + m_battlefield_rect.height / 2);
+        auto& peer = m_peers[m_connected_players];
+
+        m_aircraft_info[m_aircraft_identifier_counter].m_position = sf::Vector2f(
+            m_battlefield_rect.width / 2.f,
+            m_battlefield_rect.top + m_battlefield_rect.height / 2.f
+        );
         m_aircraft_info[m_aircraft_identifier_counter].m_hitpoints = 100;
         m_aircraft_info[m_aircraft_identifier_counter].m_missile_ammo = 2;
 
@@ -392,29 +422,24 @@ void GameServer::HandleIncomingConnections()
         packet << m_aircraft_info[m_aircraft_identifier_counter].m_position.x;
         packet << m_aircraft_info[m_aircraft_identifier_counter].m_position.y;
 
-        m_peers[m_connected_players]->m_aircraft_identifiers.emplace_back(m_aircraft_identifier_counter);
+        peer->m_aircraft_identifiers.emplace_back(m_aircraft_identifier_counter);
 
         BroadcastMessage("New player");
-        InformWorldState(m_peers[m_connected_players]->m_socket);
+        InformWorldState(peer->m_socket);
         NotifyPlayerSpawn(m_aircraft_identifier_counter++);
 
-        m_peers[m_connected_players]->m_socket.send(packet);
-        m_peers[m_connected_players]->m_ready = true;
-        m_peers[m_connected_players]->m_last_packet_time = Now();
+        peer->m_socket.send(packet);
+        peer->m_ready = true;
+        peer->m_last_packet_time = Now();
 
         m_aircraft_count++;
         m_connected_players++;
 
         if (m_connected_players >= m_max_connected_players)
-        {
             SetListening(false);
-        }
-        else
-        {
-            m_peers.emplace_back(PeerPtr(new RemotePeer()));
-        }
     }
 }
+
 
 void GameServer::HandleDisconnections()
 {
@@ -500,29 +525,65 @@ void GameServer::BroadcastMessage(const std::string& message)
 
 void GameServer::SendToAll(sf::Packet& packet)
 {
-    for (std::size_t i = 0; i < m_connected_players; ++i)
+    std::size_t sent_count = 0;
+
+    for (const PeerPtr& peer : m_peers)
     {
-        if (m_peers[i]->m_ready)
+        if (peer->m_ready && !peer->m_timed_out)
         {
-            m_peers[i]->m_socket.send(packet);
+            if (peer->m_socket.send(packet) == sf::Socket::Done)
+            {
+                ++sent_count;
+            }
         }
     }
+
+    std::cout << "[GameServer] Sent packet to " << sent_count << " active peers\n";
 }
+
 
 void GameServer::UpdateClientState()
 {
     sf::Packet update_client_state_packet;
     update_client_state_packet << static_cast<sf::Int32>(Server::PacketType::kUpdateClientState);
     update_client_state_packet << static_cast<float>(m_battlefield_rect.top + m_battlefield_rect.height);
-    update_client_state_packet << static_cast<sf::Int32>(m_aircraft_count);
 
-    for (const auto& aircraft : m_aircraft_info)
+    sf::Int32 aircraft_sent = 0;
+
+    // Reserve space for aircraft count (to be filled later)
+    update_client_state_packet << aircraft_sent; // placeholder at index 2
+
+    std::vector<sf::Packet> aircraft_packets;
+
+    for (std::map<sf::Int32, AircraftInfo>::const_iterator it = m_aircraft_info.begin(); it != m_aircraft_info.end(); ++it)
     {
-        update_client_state_packet << aircraft.first << aircraft.second.m_position.x << aircraft.second.m_position.y << aircraft.second.m_hitpoints << aircraft.second.m_missile_ammo;
+        const sf::Int32 id = it->first;
+        const AircraftInfo& info = it->second;
+
+        if (info.m_hitpoints > 0)
+        {
+            sf::Packet p;
+            p << id << info.m_position.x << info.m_position.y << info.m_hitpoints << info.m_missile_ammo;
+            aircraft_packets.push_back(p);
+            ++aircraft_sent;
+        }
     }
 
-    SendToAll(update_client_state_packet);
+    // Repack cleanly now that we know aircraft count
+    // Rebuild packet with accurate count and all aircraft
+    sf::Packet final_packet;
+    final_packet << static_cast<sf::Int32>(Server::PacketType::kUpdateClientState);
+    final_packet << static_cast<float>(m_battlefield_rect.top + m_battlefield_rect.height);
+    final_packet << aircraft_sent;
+
+    for (std::vector<sf::Packet>::const_iterator pkt_it = aircraft_packets.begin(); pkt_it != aircraft_packets.end(); ++pkt_it)
+    {
+        final_packet.append(pkt_it->getData(), pkt_it->getDataSize());
+    }
+
+    SendToAll(final_packet);
 }
+
 
 
 //It is essential to set the sockets to non-blocking - m_socket.setBlocking(false)
