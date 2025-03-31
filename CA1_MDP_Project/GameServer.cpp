@@ -395,13 +395,23 @@ void GameServer::HandleIncomingConnections()
 
     if (m_listener_socket.accept(m_peers[m_connected_players]->m_socket) == sf::TcpListener::Done)
     {
-        //  Use proper battlefield-relative spawn points
-        std::map<int, SpawnPoint> spawn_points = InitializeSpawnPoints();
-        const SpawnPoint& spawn = spawn_points[m_aircraft_identifier_counter];
+        //  Calculate world-based spawn positions
+        const int max_spawns = 15;
+        const float padding = 100.f;
+        const float available_width = m_battlefield_rect.width - 2 * padding;
+        const float available_height = m_battlefield_rect.height * 0.4f;  // bottom 40% of screen
+        const int columns = 5;
+        const int rows = max_spawns / columns;
+        const float spacing_x = available_width / (columns - 1);
+        const float spacing_y = available_height / (rows - 1);
 
-        //  Convert to battlefield-space
-        float spawn_x = spawn.m_x;
-        float spawn_y = m_battlefield_rect.top + spawn.m_y;
+        //  Determine this aircraft's spawn point (based on ID)
+        int spawn_index = m_aircraft_identifier_counter % max_spawns;
+        int col = spawn_index % columns;
+        int row = spawn_index / columns;
+
+        float spawn_x = m_battlefield_rect.left + padding + col * spacing_x;
+        float spawn_y = m_battlefield_rect.top + m_battlefield_rect.height - padding - row * spacing_y;
 
         m_aircraft_info[m_aircraft_identifier_counter].m_position = sf::Vector2f(spawn_x, spawn_y);
         m_aircraft_info[m_aircraft_identifier_counter].m_hitpoints = 100;
