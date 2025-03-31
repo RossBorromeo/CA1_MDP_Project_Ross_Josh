@@ -132,6 +132,7 @@ Aircraft* World::AddAircraft(int identifier)
 	std::unique_ptr<Aircraft> player(new Aircraft(AircraftType::kBattleShip, m_textures, m_fonts));
 	player->setPosition(m_camera.getCenter());
 	player->SetIdentifier(identifier);
+	player->SetRespawnPosition(player->getPosition());
 
 	m_player_aircraft.emplace_back(player.get());
 	m_scene_layers[static_cast<int>(SceneLayers::kUpperAir)]->AttachChild(std::move(player));
@@ -519,11 +520,13 @@ void World::HandleCollisions()
 
 			if (!player.IsInvincible())
 			{
-				player.Damage(10);
-				player.StartInvincibility();
+				int base_damage = 10;
+				if (enemy.GetType() == AircraftType::kAvenger)
+					base_damage = 25; //  More damage from Avenger!
 
-				// Use aircraft's own saved respawn position
-				player.setPosition(player.GetRespawnPosition()); // Set different spawn position
+				player.Damage(base_damage);
+				player.StartInvincibility();
+				player.setPosition(player.GetRespawnPosition());
 			}
 
 			enemy.Destroy();
