@@ -56,7 +56,9 @@ void World::Update(sf::Time dt)
 	SpawnEnemies();
 	m_camera.move(0, m_scrollspeed * dt.asSeconds());
 
+
 	for (Aircraft* aircraft : m_player_aircraft)
+
 	{
 		aircraft->SetVelocity(0.f, 0.f);
 	}
@@ -66,6 +68,8 @@ void World::Update(sf::Time dt)
 
 	while (!m_command_queue.IsEmpty())
 		m_scenegraph.OnCommand(m_command_queue.Pop(), dt);
+
+
 
 	AdaptPlayerVelocity();
 	HandleCollisions();
@@ -78,6 +82,7 @@ void World::Update(sf::Time dt)
 	m_scenegraph.RemoveWrecks();
 	m_scenegraph.Update(dt, m_command_queue);
 	AdaptPlayerPosition();
+	UpdateBackground(dt.asSeconds());
 	UpdateSounds();
 
 
@@ -139,14 +144,14 @@ bool World::HasAlivePlayer() const
 }
 
 
-bool World::HasPlayerReachedEnd() const
-{
-	if (Aircraft* aircraft = GetAircraft(1))
-	{
-		return !m_world_bounds.contains(aircraft->getPosition());
-	}
-	return false;
-}
+//bool World::HasPlayerReachedEnd() const
+//{
+//	if (Aircraft* aircraft = GetAircraft(1))
+//	{
+//		return !m_world_bounds.contains(aircraft->getPosition());
+//	}
+//	return false;
+//}
 
 
 
@@ -200,6 +205,7 @@ void World::LoadTextures()
 
 void World::BuildScene()
 {
+	
 	//Initialize the different layers
 	for (std::size_t i = 0; i < NumSceneLayers; ++i)
 	{
@@ -209,22 +215,31 @@ void World::BuildScene()
 		m_scenegraph.AttachChild(std::move(layer));
 	}
 
-	//Prepare the background
+	// Get the texture
 	sf::Texture& texture = m_textures.Get(TextureID::kSpace);
-	sf::IntRect textureRect(m_world_bounds);
-	texture.setRepeated(true);
+	texture.setRepeated(true); // Ensure the texture repeats
 
-	//Add the background sprite to the world
-	std::unique_ptr<SpriteNode> background_sprite(new SpriteNode(texture, textureRect));
-	background_sprite->setPosition(m_world_bounds.left, m_world_bounds.top);
-	m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->AttachChild(std::move(background_sprite));
+	// Set the texture rect to match the entire world size
+	sf::IntRect textureRect(0, 0, static_cast<int>(m_world_bounds.width), static_cast<int>(m_world_bounds.height));
 
-	//Add the finish line
-	sf::Texture& finish_texture = m_textures.Get(TextureID::kFinishLine);
-	std::unique_ptr<SpriteNode> finish_sprite(new SpriteNode(finish_texture));
-	finish_sprite->setPosition(0.f, -76.f);
-	m_finish_sprite = finish_sprite.get();
-	m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->AttachChild(std::move(finish_sprite));
+	// Create the first background sprite
+	std::unique_ptr<SpriteNode> background_sprite1 = std::make_unique<SpriteNode>(texture, textureRect);
+	background_sprite1->setPosition(m_world_bounds.left, m_world_bounds.top);
+
+	// Create the second background sprite (placed exactly below the first)
+	std::unique_ptr<SpriteNode> background_sprite2 = std::make_unique<SpriteNode>(texture, textureRect);
+	background_sprite2->setPosition(m_world_bounds.left, m_world_bounds.top + m_world_bounds.height);
+
+	// Attach both to scene
+	m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->AttachChild(std::move(background_sprite1));
+	m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->AttachChild(std::move(background_sprite2));
+
+	////Add the finish line
+	//sf::Texture& finish_texture = m_textures.Get(TextureID::kFinishLine);
+	//std::unique_ptr<SpriteNode> finish_sprite(new SpriteNode(finish_texture));
+	//finish_sprite->setPosition(0.f, -76.f);
+	//m_finish_sprite = finish_sprite.get();
+	//m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->AttachChild(std::move(finish_sprite));
 
 	//Add the particle nodes to the scene
 	std::unique_ptr<ParticleNode> smokeNode(new ParticleNode(ParticleType::kSmoke, m_textures));
@@ -258,7 +273,9 @@ void World::BuildScene()
 	
 }
 
+
 void World::AdaptPlayerPosition() 
+
 {
 	//Keep the players on the screen 
 	sf::FloatRect view_bounds = GetViewBounds();
@@ -444,32 +461,6 @@ void World::AddEnemies()
 	{
 		return;
 	}
-	//Add all emenies
-	AddEnemy(AircraftType::kMeteor, 0.f, 500.f);
-	AddEnemy(AircraftType::kMeteor, 0.f, 1000.f);
-	AddEnemy(AircraftType::kMeteor, +100.f, 1150.f);
-	AddEnemy(AircraftType::kMeteor, -100.f, 1150.f);
-	AddEnemy(AircraftType::kAvenger, 70.f, 1500.f);
-	AddEnemy(AircraftType::kAvenger, -70.f, 1500.f);
-	AddEnemy(AircraftType::kAvenger, -70.f, 1710.f);
-	AddEnemy(AircraftType::kAvenger, 70.f, 1700.f);
-	AddEnemy(AircraftType::kAvenger, 30.f, 1850.f);
-	AddEnemy(AircraftType::kMeteor, 300.f, 2200.f);
-	AddEnemy(AircraftType::kMeteor, -300.f, 2200.f);
-	AddEnemy(AircraftType::kMeteor, 0.f, 2200.f);
-	AddEnemy(AircraftType::kMeteor, 0.f, 2500.f);
-	AddEnemy(AircraftType::kAvenger, -300.f, 2700.f);
-	AddEnemy(AircraftType::kAvenger, -300.f, 2700.f);
-	AddEnemy(AircraftType::kMeteor, 0.f, 3000.f);
-	AddEnemy(AircraftType::kMeteor, 250.f, 3250.f);
-	AddEnemy(AircraftType::kMeteor, -250.f, 3250.f);
-	AddEnemy(AircraftType::kAvenger, 0.f, 3500.f);
-	AddEnemy(AircraftType::kAvenger, 0.f, 3700.f);
-	AddEnemy(AircraftType::kMeteor, 0.f, 3800.f);
-	AddEnemy(AircraftType::kAvenger, 0.f, 4000.f);
-	AddEnemy(AircraftType::kAvenger, -200.f, 4200.f);
-	AddEnemy(AircraftType::kMeteor, 200.f, 4200.f);
-	AddEnemy(AircraftType::kMeteor, 0.f, 4400.f);
 
 	//Sort according to y value so that lower enemies are checked first
 	SortEnemies();
@@ -611,6 +602,24 @@ void World::HandleCollisions()
 			}
 
 			projectile.Destroy();
+		}
+	}
+}
+
+void World::UpdateBackground(float deltaTime)
+{
+	const float scrollSpeed = 15.0f; // Adjust based on your game speed
+
+	for (auto& background : m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->GetChildren())
+	{
+		// Move the background downward
+		background->move(0, scrollSpeed * deltaTime);
+
+		// Check if the background has moved completely out of view
+		if (background->getPosition().y >= m_world_bounds.height)
+		{
+			// Reset its position to the top
+			background->move(0, -2 * m_world_bounds.height);
 		}
 	}
 }
