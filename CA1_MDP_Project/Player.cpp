@@ -3,7 +3,6 @@
 #include "Aircraft.hpp"
 #include "NetworkProtocol.hpp"
 #include <SFML/Network/Packet.hpp>
-
 #include <map>
 #include <string>
 #include <algorithm>
@@ -146,6 +145,7 @@ void Player::HandleRealtimeInput(CommandQueue& commands)
     }
 }
 
+
 void Player::HandleRealtimeNetworkInput(CommandQueue& commands)
 {
     if (m_socket && !IsLocal())
@@ -158,6 +158,7 @@ void Player::HandleRealtimeNetworkInput(CommandQueue& commands)
         }
     }
 }
+
 
 
 

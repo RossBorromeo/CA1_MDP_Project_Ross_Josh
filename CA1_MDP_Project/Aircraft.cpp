@@ -26,6 +26,7 @@ Aircraft::Aircraft(AircraftType type, const TextureHolder& textures, const FontH
 	, m_sprite(textures.Get(Table[static_cast<int>(type)].m_texture), Table[static_cast<int>(type)].m_texture_rect)
 	, m_explosion(textures.Get(TextureID::kExplosion))
 	, m_health_display(nullptr)
+	, m_id_display(nullptr)
 	, m_missile_display(nullptr)
 	, m_distance_travelled(0.f)
 	, m_directions_index(0)
@@ -42,6 +43,7 @@ Aircraft::Aircraft(AircraftType type, const TextureHolder& textures, const FontH
 	, m_invincibility_timer(sf::Time::Zero)
 	, m_invincibility_duration(sf::seconds(1.5f))
 	, m_respawn_position()
+	
 {
 	m_explosion.SetFrameSize(sf::Vector2i(256, 256));
 	m_explosion.SetNumFrames(16);
@@ -63,6 +65,15 @@ Aircraft::Aircraft(AircraftType type, const TextureHolder& textures, const FontH
 	std::unique_ptr<TextNode> health_display(new TextNode(fonts, *health));
 	m_health_display = health_display.get();
 	AttachChild(std::move(health_display));
+
+	//ID display(Ross)
+	if (GetCategory() == static_cast<int>(ReceiverCategories::kPlayerAircraft)) {
+		std::string* player_id = new std::string("P" + std::to_string(m_identifier)); 
+		std::unique_ptr<TextNode> id_display(new TextNode(fonts, *player_id));
+		m_id_display = id_display.get();
+		AttachChild(std::move(id_display));
+	}
+
 
 	if (Aircraft::GetCategory() == static_cast<int>(ReceiverCategories::kPlayerAircraft))
 
@@ -101,10 +112,19 @@ void Aircraft::CollectMissile(unsigned int count) {
 	m_missile_ammo += count;
 }
 
-void Aircraft::UpdateTexts() {
+void Aircraft::UpdateTexts() 
+{
 	m_health_display->SetString(std::to_string(GetHitPoints()) + "HP");
 	m_health_display->setPosition(0.f, 50.f);
 	m_health_display->setRotation(-getRotation());
+
+	// Only update for player aircraft
+	if (m_id_display) 
+	{
+		m_id_display->SetString("P" + std::to_string(m_identifier));
+		m_id_display->setPosition(0.f, -50.f); // Position above aircraft
+		m_id_display->setRotation(-getRotation());
+	}
 
 	/*if (m_missile_display) {
 		m_missile_display->setPosition(0.f, 70.f);
@@ -184,12 +204,19 @@ sf::FloatRect Aircraft::GetBoundingRect() const {
 	return GetWorldTransform().transformRect(m_sprite.getGlobalBounds());
 }
 
-int Aircraft::GetIdentifier() {
+int Aircraft::GetIdentifier() 
+{
 	return m_identifier;
 }
 
-void Aircraft::SetIdentifier(int identifier) {
-	m_identifier = identifier;
+void Aircraft::SetIdentifier(int identifier) 
+{
+	m_identifier = identifier;  
+
+	if (m_id_display) 
+	{
+		m_id_display->SetString("P" + std::to_string(m_identifier)); 
+	}
 }
 
 bool Aircraft::IsMarkedForRemoval() const {
