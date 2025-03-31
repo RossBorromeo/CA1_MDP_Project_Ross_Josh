@@ -46,7 +46,7 @@ void World::SetWorldScrollCompensation(float compensation)
 
 void World::Update(sf::Time dt)
 {
-	//UpdateBackground(dt.asSeconds());
+	UpdateBackground(dt.asSeconds());
 	m_spawn_timer += dt;
 	if (m_spawn_timer >= m_spawn_interval)
 	{
@@ -137,7 +137,7 @@ Aircraft* World::AddAircraft(int identifier)
 	std::unique_ptr<Aircraft> player(new Aircraft(AircraftType::kBattleShip, m_textures, m_fonts));
 	player->setPosition(m_camera.getCenter());
 	player->SetIdentifier(identifier);
-
+	player->SetRespawnPosition(player->getPosition());
 	m_player_aircraft.emplace_back(player.get());
 	m_scene_layers[static_cast<int>(SceneLayers::kUpperAir)]->AttachChild(std::move(player));
 	return m_player_aircraft.back();
@@ -539,23 +539,23 @@ void World::HandleCollisions()
 	}
 }
 
-//void World::UpdateBackground(float deltaTime)
-//{
-//	const float scrollSpeed = 15.0f; // Adjust based on your game speed
-//
-//	for (auto& background : m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->GetChildren())
-//	{
-//		// Move the background downward
-//		background->move(0, scrollSpeed * deltaTime);
-//
-//		// Check if the background has moved completely out of view
-//		if (background->getPosition().y >= m_world_bounds.height)
-//		{
-//			// Reset its position to the top
-//			background->move(0, -2 * m_world_bounds.height);
-//		}
-//	}
-//}
+void World::UpdateBackground(float deltaTime)
+{
+	const float scrollSpeed = 15.0f; // Adjust based on your game speed
+
+	for (auto& background : m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->GetChildren())
+	{
+		// Move the background downward
+		background->move(0, scrollSpeed * deltaTime);
+
+		// Check if the background has moved completely out of view
+		if (background->getPosition().y >= m_world_bounds.height)
+		{
+			// Reset its position to the top
+			background->move(0, -2 * m_world_bounds.height);
+		}
+	}
+}
 
 
 void World::UpdateSounds()
