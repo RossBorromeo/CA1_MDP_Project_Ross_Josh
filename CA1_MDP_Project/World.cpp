@@ -508,11 +508,13 @@ void World::HandleCollisions()
 
 			if (!player.IsInvincible())
 			{
-				player.Damage(10);
-				player.StartInvincibility();
+				if (enemy.GetType() == AircraftType::kAvenger)
+					player.Damage(30);  // More damage for Avenger
+				else
+					player.Damage(10);  // Normal damage
 
-				// Use aircraft's own saved respawn position
-				player.setPosition(player.GetRespawnPosition()); // Set different spawn position
+				player.StartInvincibility();
+				player.setPosition(player.GetRespawnPosition());
 			}
 
 			enemy.Destroy();
