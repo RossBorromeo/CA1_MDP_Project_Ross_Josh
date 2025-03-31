@@ -87,9 +87,14 @@ Aircraft::Aircraft(AircraftType type, const TextureHolder& textures, const FontH
 	UpdateTexts();
 }
 
-unsigned int Aircraft::GetCategory() const {
-	return IsAllied() ? static_cast<unsigned int>(ReceiverCategories::kPlayerAircraft)
-		: static_cast<unsigned int>(ReceiverCategories::kEnemyAircraft);
+unsigned int Aircraft::GetCategory() const
+{
+	if (IsAllied())
+	{
+		return static_cast<unsigned int>(ReceiverCategories::kPlayerAircraft);
+	}
+	return static_cast<unsigned int>(ReceiverCategories::kEnemyAircraft);
+
 }
 
 int Aircraft::GetMissileAmmo() const {
@@ -141,7 +146,10 @@ void Aircraft::UpdateMovementPattern(sf::Time dt) {
 		}
 
 		double radians = Utility::ToRadians(directions[m_directions_index].m_angle + 90.f);
-		SetVelocity(GetMaxSpeed() * std::cos(radians), GetMaxSpeed() * std::sin(radians));
+		float vx = GetMaxSpeed() * std::cos(radians);
+		float vy = GetMaxSpeed() * std::sin(radians);
+
+		SetVelocity(vx, vy);
 		m_distance_travelled += GetMaxSpeed() * dt.asSeconds();
 	}
 }
