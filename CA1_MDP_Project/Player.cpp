@@ -3,7 +3,6 @@
 #include "Aircraft.hpp"
 #include "NetworkProtocol.hpp"
 #include <SFML/Network/Packet.hpp>
-
 #include <map>
 #include <string>
 #include <algorithm>
@@ -131,18 +130,6 @@ void Player::DisableAllRealtimeActions()
         packet << static_cast<sf::Int32>(action.first);
         packet << false;
         m_socket->send(packet);
-    }
-}
-
-void Player::HandleRealtimeInput(CommandQueue& commands)
-{
-    // Check if this is a networked game and local player or just a single player game
-    if ((m_socket && IsLocal()) || !m_socket)
-    {
-        // Lookup all actions and push corresponding commands to queue
-        std::vector<Action> activeActions = m_key_binding->GetRealtimeActions();
-        for (Action action : activeActions)
-            commands.Push(m_action_binding[action]);
     }
 }
 
