@@ -291,23 +291,20 @@ void GameServer::HandleIncomingPackets(sf::Packet& packet, RemotePeer& receiving
         std::cout << "[GameServer] Ready count: " << m_players_ready.size()
             << " / " << m_connected_players << std::endl;
 
-
+        //  Only start once *all connected players*, including host, have sent ReadyNotice
         if (!m_game_started && m_players_ready.size() == m_connected_players)
         {
             m_game_started = true;
+
             sf::Packet ready_packet;
             ready_packet << static_cast<sf::Int32>(Server::PacketType::kGameReady);
             SendToAll(ready_packet);
             BroadcastMessage("Game Started");
+
             SetListening(false);
-            std::cout << "[GameServer] Player " << id << " is ready\n";
-            std::cout << "[GameServer] Ready count: " << m_players_ready.size()
-                << "/" << m_connected_players << std::endl;
         }
-
-        std::cout << "[GameServer] Player " << id << " marked as ready\n";
-
     }
+
     break;
 
 
