@@ -366,45 +366,53 @@ void World::GenerateRandomEnemy()
 		return;
 	}
 
-	static sf::Clock spawn_timer;
-	sf::Time spawn_interval = sf::seconds(0.45f); // Spawn every .45 seconds
+	static sf::Clock meteor_timer;
+	static sf::Clock avenger_timer;
 
-	if (spawn_timer.getElapsedTime() >= spawn_interval)
+	sf::Time meteor_spawn_interval = sf::seconds(0.45f);  // Meteor spawns every 0.45s
+	sf::Time avenger_spawn_interval = sf::seconds(1.5f);  // Avenger spawns every 1.5s
+
+	float screen_width = m_target.getSize().x;
+	float screen_height = m_target.getSize().y;
+
+	float min_x = 50.f;
+	float max_x = screen_width - 50.f;
+
+	float min_y = m_camera.getCenter().y - screen_height / 2.f - 100.f; // Slightly above screen
+	float max_y = m_camera.getCenter().y - screen_height / 2.f - 50.f;
+
+	std::uniform_real_distribution<float> x_distribution(min_x, max_x);
+	std::uniform_real_distribution<float> y_distribution(min_y, max_y);
+
+	// Spawn KMeteor at regular intervals
+	if (meteor_timer.getElapsedTime() >= meteor_spawn_interval)
 	{
-		float screen_width = m_target.getSize().x;
-		float screen_height = m_target.getSize().y;
-
-		// Ensure enemies spawn inside the screen width
-		float min_x = 50.f;
-		float max_x = screen_width - 50.f;
-
-		// Instead of spawning deep below, spawn slightly above the player
-		float min_y = m_camera.getCenter().y - screen_height / 2.f - 100.f; // Above screen
-		float max_y = m_camera.getCenter().y - screen_height / 2.f - 50.f; // Not too far
-
-		std::uniform_real_distribution<float> x_distribution(min_x, max_x);
-		std::uniform_real_distribution<float> y_distribution(min_y, max_y);
-
-		std::vector<AircraftType> enemy_types = { AircraftType::kMeteor };
-		std::uniform_int_distribution<int> type_distribution(0, enemy_types.size() - 1);
-		AircraftType type = enemy_types[type_distribution(m_rng)];
-
 		float x = x_distribution(m_rng);
 		float y = y_distribution(m_rng);
 
-		std::cout << "Enemy spawned at: " << x << ", " << y << std::endl; // Debug print
+		std::unique_ptr<Aircraft> meteor = std::make_unique<Aircraft>(AircraftType::kMeteor, m_textures, m_fonts);
+		meteor->setPosition(x, y);
+		meteor->setRotation(180.f); 
 
-		// Create enemy
-		std::unique_ptr<Aircraft> enemy = std::make_unique<Aircraft>(type, m_textures, m_fonts);
-		enemy->setPosition(x, y);
-		enemy->setRotation(180.f); // Face downward
+		m_scene_layers[static_cast<int>(SceneLayers::kUpperAir)]->AttachChild(std::move(meteor));
+		meteor_timer.restart();
+	}
 
-		// Add to scene graph
-		m_scene_layers[static_cast<int>(SceneLayers::kUpperAir)]->AttachChild(std::move(enemy));
+	// Spawn KAvenger at a slower rate
+	if (avenger_timer.getElapsedTime() >= avenger_spawn_interval)
+	{
+		float x = x_distribution(m_rng);
+		float y = y_distribution(m_rng);
 
-		spawn_timer.restart();
+		std::unique_ptr<Aircraft> avenger = std::make_unique<Aircraft>(AircraftType::kAvenger, m_textures, m_fonts);
+		avenger->setPosition(x, y);
+		avenger->setRotation(180.f); 
+
+		m_scene_layers[static_cast<int>(SceneLayers::kUpperAir)]->AttachChild(std::move(avenger));
+		avenger_timer.restart();
 	}
 }
+
 
 sf::FloatRect World::GetViewBounds() const
 {
