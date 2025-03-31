@@ -17,6 +17,7 @@ public:
 	void SetIdentifier(int identifier);
 	int GetMissileAmmo() const;
 	void SetMissileAmmo(int ammo);
+	AircraftType GetType() const;
 
 	void IncreaseFireRate();
 	void IncreaseFireSpread();

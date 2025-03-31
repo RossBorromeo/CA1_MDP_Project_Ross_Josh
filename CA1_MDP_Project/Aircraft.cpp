@@ -97,6 +97,11 @@ unsigned int Aircraft::GetCategory() const
 
 }
 
+AircraftType Aircraft::GetType() const
+{
+	return m_type;
+}
+
 int Aircraft::GetMissileAmmo() const {
 	return m_missile_ammo;
 }

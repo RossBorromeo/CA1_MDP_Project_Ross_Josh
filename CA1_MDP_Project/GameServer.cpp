@@ -398,7 +398,10 @@ void GameServer::HandleIncomingConnections()
     if (m_listener_socket.accept(m_peers[m_connected_players]->m_socket) == sf::TcpListener::Done)
     {
         //Order the new client to spawn its player 1
-        m_aircraft_info[m_aircraft_identifier_counter].m_position = sf::Vector2f(m_battlefield_rect.width / 2, m_battlefield_rect.top + m_battlefield_rect.height / 2);
+        float spawn_x = m_battlefield_rect.width / 2.f;
+        float spawn_y = m_battlefield_rect.top + m_battlefield_rect.height / 2.f + 250.f;
+
+        m_aircraft_info[m_aircraft_identifier_counter].m_position = sf::Vector2f(spawn_x, spawn_y);
         m_aircraft_info[m_aircraft_identifier_counter].m_hitpoints = 100;
         m_aircraft_info[m_aircraft_identifier_counter].m_missile_ammo = 2;
 
