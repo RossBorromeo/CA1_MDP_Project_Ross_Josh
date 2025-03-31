@@ -120,8 +120,11 @@ void GameServer::ExecutionThread()
         HandleIncomingConnections();
         HandleIncomingPackets();
 
-        frame_time += frame_clock.restart();
-        tick_time += tick_clock.restart();
+        frame_time += frame_clock.getElapsedTime();
+        frame_clock.restart();
+
+        tick_time += tick_clock.getElapsedTime();
+        tick_clock.restart();
 
         if (m_game_started)
         {
@@ -295,6 +298,7 @@ void GameServer::HandleIncomingPackets(sf::Packet& packet, RemotePeer& receiving
         sf::Int32 action;
         bool action_enabled;
         packet >> aircraft_identifier >> action >> action_enabled;
+       std::cout << "[GameServer] Player " << aircraft_identifier << " changed realtime action: " << action << " to " << action_enabled << std::endl;
         NotifyPlayerRealtimeChange(aircraft_identifier, action, action_enabled);
     }
     break;
@@ -446,8 +450,6 @@ void GameServer::HandleIncomingConnections()
         peer->m_socket.send(packet);
         m_players_ready[m_aircraft_identifier_counter] = true;
         peer->m_ready = true;
-
-
      
 
         peer->m_last_packet_time = Now();

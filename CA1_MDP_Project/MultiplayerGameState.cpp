@@ -37,7 +37,7 @@ MultiplayerGameState::MultiplayerGameState(StateStack& stack, Context context, b
 	, m_time_since_last_packet(sf::seconds(0.f))
 	, m_local_ready(false)
 	, m_ready_players(0)
-	, m_identifier(-1) //  NEW: local identifier
+	, m_identifier(-1) 
 {
 	m_broadcast_text.setFont(context.fonts->Get(Font::kMain));
 	m_broadcast_text.setPosition(1024.f / 2, 100.f);
@@ -77,6 +77,11 @@ void MultiplayerGameState::Draw()
 
 		if (!m_broadcasts.empty())
 			m_window.draw(m_broadcast_text);
+
+		if (m_local_player_identifiers.size() < 2 && m_player_invitation_time < sf::seconds(0.5f))
+		{
+			m_window.draw(m_player_invitation_text);
+		}
 	}
 	else
 	{
@@ -91,10 +96,7 @@ bool MultiplayerGameState::Update(sf::Time dt)
 		if (m_game_started)
 			m_world.Update(dt);
 
-		// Real-time input
-		CommandQueue& commands = m_world.GetCommandQueue();
-		for (auto& pair : m_players)
-			pair.second->HandleRealtimeNetworkInput(commands);
+		
 
 		// Receive network packet
 		sf::Packet packet;
@@ -165,6 +167,15 @@ else if (m_time_since_last_packet > m_client_timeout)
 
 bool MultiplayerGameState::HandleEvent(const sf::Event& event)
 {
+	CommandQueue& commands = m_world.GetCommandQueue();
+	for (auto& pair : m_players)
+	{
+		pair.second->HandleEvent(event, commands);
+	}
+		
+
+
+
 	if (event.type == sf::Event::KeyPressed)
 	{
 		// Enter: Ready logic (already there)
@@ -197,15 +208,10 @@ bool MultiplayerGameState::HandleEvent(const sf::Event& event)
 			std::cout << "[Multiplayer] Pause triggered\n";
 			RequestStackPush(StateID::kPause);  // Or use kNetworkPause if you have that too
 		}
+
+
+
 	}
-
-	
-
-
-	CommandQueue& commands = m_world.GetCommandQueue();
-	for (auto& pair : m_players)
-		pair.second->HandleEvent(event, commands);
-
 	return true;
 }
 
@@ -308,10 +314,16 @@ void MultiplayerGameState::HandlePacket(sf::Int32 type, sf::Packet& packet)
 	}
 	case Server::PacketType::kPlayerRealtimeChange:
 	{
-		sf::Int32 id, action;
-		bool enabled;
-		packet >> id >> action >> enabled;
-		m_players[id]->HandleNetworkRealtimeChange(static_cast<Action>(action), enabled);
+		sf::Int32 aircraft_identifier;
+		sf::Int32 action;
+		bool action_enabled;
+		packet >> aircraft_identifier >> action >> action_enabled;
+
+		auto itr = m_players.find(aircraft_identifier);
+		if (itr != m_players.end())
+		{
+			itr->second->HandleNetworkRealtimeChange(static_cast<Action>(action), action_enabled);
+		}
 		break;
 	}
 	case Server::PacketType::kPlayerDisconnect:
