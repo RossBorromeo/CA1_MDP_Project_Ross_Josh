@@ -10,7 +10,8 @@
 const sf::Time Application::kTimePerFrame = sf::seconds(1.f / 60.f);
 
 Application::Application()
-    : m_window(sf::VideoMode::getDesktopMode(), "Networked", sf::Style::Resize) //Ross - Size now resizes to your screen size
+                                                //Ross did this =P
+    : m_window(sf::VideoMode::getDesktopMode(), "Meteor Shower", sf::Style::Resize) //Ross - Size now resizes to your screen size
     , m_key_binding_1(1), m_key_binding_2(2)
     , m_stack(State::Context(m_window, m_textures, m_fonts, m_music, m_sound, m_key_binding_1, m_key_binding_2))
 {

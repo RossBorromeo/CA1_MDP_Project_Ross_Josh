@@ -12,7 +12,7 @@ TitleState::TitleState(StateStack& stack, Context context) : State(stack, contex
     m_text.setCharacterSize(70);
     m_text.setFillColor(sf::Color::Magenta);
     Utility::CentreOrigin(m_text);
-    m_text.setPosition(520, 500);
+    m_text.setPosition(975, 550);
 }
 
 

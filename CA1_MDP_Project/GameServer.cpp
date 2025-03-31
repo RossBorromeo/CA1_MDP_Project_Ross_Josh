@@ -5,13 +5,13 @@
 #include "Utility.hpp"
 #include "PickupType.hpp"
 #include "AircraftType.hpp"
-
+#include "DataTables.hpp"
 #include <iostream>
 
 GameServer::GameServer(sf::Vector2f battlefield_size)
     : m_thread(&GameServer::ExecutionThread, this)
     , m_listening_state(false)
-    , m_client_timeout(sf::seconds(30.f))
+    , m_client_timeout(sf::seconds(90.f))
     , m_max_connected_players(15)
     , m_connected_players(0)
     , m_world_height(5000.f)
@@ -391,15 +391,17 @@ void GameServer::HandleIncomingPackets(sf::Packet& packet, RemotePeer& receiving
 void GameServer::HandleIncomingConnections()
 {
     if (!m_listening_state)
-    {
         return;
-    }
 
     if (m_listener_socket.accept(m_peers[m_connected_players]->m_socket) == sf::TcpListener::Done)
     {
-        //Order the new client to spawn its player 1
-        float spawn_x = m_battlefield_rect.width / 2.f;
-        float spawn_y = m_battlefield_rect.top + m_battlefield_rect.height / 2.f + 250.f;
+        //  Use proper battlefield-relative spawn points
+        std::map<int, SpawnPoint> spawn_points = InitializeSpawnPoints();
+        const SpawnPoint& spawn = spawn_points[m_aircraft_identifier_counter];
+
+        //  Convert to battlefield-space
+        float spawn_x = spawn.m_x;
+        float spawn_y = m_battlefield_rect.top + spawn.m_y;
 
         m_aircraft_info[m_aircraft_identifier_counter].m_position = sf::Vector2f(spawn_x, spawn_y);
         m_aircraft_info[m_aircraft_identifier_counter].m_hitpoints = 100;
@@ -408,8 +410,7 @@ void GameServer::HandleIncomingConnections()
         sf::Packet packet;
         packet << static_cast<sf::Int32>(Server::PacketType::kSpawnSelf);
         packet << m_aircraft_identifier_counter;
-        packet << m_aircraft_info[m_aircraft_identifier_counter].m_position.x;
-        packet << m_aircraft_info[m_aircraft_identifier_counter].m_position.y;
+        packet << spawn_x << spawn_y;
 
         m_peers[m_connected_players]->m_aircraft_identifiers.emplace_back(m_aircraft_identifier_counter);
 
@@ -425,15 +426,12 @@ void GameServer::HandleIncomingConnections()
         m_connected_players++;
 
         if (m_connected_players >= m_max_connected_players)
-        {
             SetListening(false);
-        }
         else
-        {
             m_peers.emplace_back(PeerPtr(new RemotePeer()));
-        }
     }
 }
+
 
 
 void GameServer::HandleDisconnections()

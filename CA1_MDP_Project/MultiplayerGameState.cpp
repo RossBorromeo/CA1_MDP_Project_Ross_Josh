@@ -299,6 +299,7 @@ void MultiplayerGameState::HandlePacket(sf::Int32 type, sf::Packet& packet)
 		sf::Int32 aircraft_identifier;
 		sf::Vector2f aircraft_position;
 		packet >> aircraft_identifier >> aircraft_position.x >> aircraft_position.y;
+		m_identifier = aircraft_identifier;
 		Aircraft* aircraft = m_world.AddAircraft(aircraft_identifier);
 		aircraft->setPosition(aircraft_position);
 		m_players[aircraft_identifier].reset(new Player(&m_socket, aircraft_identifier, GetContext().keys1));

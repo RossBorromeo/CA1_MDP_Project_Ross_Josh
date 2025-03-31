@@ -103,17 +103,7 @@ void World::Draw()
 		m_target.draw(m_scenegraph);
 	}
 
-	// DEBUG: draw boxes for spawn points
-	for (const auto& pair : InitializeSpawnPoints())
-	{
-		sf::RectangleShape box(sf::Vector2f(60.f, 60.f));
-		box.setOrigin(30.f, 30.f);
-		box.setPosition(pair.second.m_x, pair.second.m_y);
-		box.setFillColor(sf::Color::Transparent);
-		box.setOutlineColor(sf::Color::Green);
-		box.setOutlineThickness(2.f);
-		m_target.draw(box);  // or m_scene_texture.draw(box) if using post-processing
-	}
+	
 }
 
 
