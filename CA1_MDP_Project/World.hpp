@@ -42,7 +42,7 @@ public:
 	void SortEnemies();
 
 	bool HasAlivePlayer() const;
-	bool HasPlayerReachedEnd() const;
+	//bool HasPlayerReachedEnd() const;
 
 	void SetWorldScrollCompensation(float compensation);
 	Aircraft* GetAircraft(int identifier) const;
@@ -63,6 +63,7 @@ private:
 	void GuideMissiles();
 
 	void HandleCollisions();
+	void UpdateBackground(float deltaTime);
 	void UpdateSounds();
 
 private:
