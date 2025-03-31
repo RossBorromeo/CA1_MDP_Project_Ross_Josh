@@ -17,7 +17,7 @@ World::World(sf::RenderTarget& output_target, FontHolder& font, SoundPlayer& sou
 	, m_scene_layers()
 	, m_world_bounds(0.f, 0.f, m_camera.getSize().x, 3000.f)
 	, m_spawn_position(m_camera.getSize().x / 2.f, m_world_bounds.height - m_camera.getSize().y / 2.f)
-	, m_scrollspeed(-50.f)
+	, m_scrollspeed(-3.f)
 	, m_player_aircraft()
 	, m_rng(m_rd()) // Initialize random number generator
 	, m_x_distribution(m_world_bounds.left + 50.f, m_world_bounds.width - 50.f) // Random X positions
@@ -543,7 +543,7 @@ void World::HandleCollisions()
 
 void World::UpdateBackground(float deltaTime)
 {
-	const float scrollSpeed = 15.0f; // Adjust based on your game speed
+	const float scrollSpeed = 3.0f; // Adjust based on your game speed
 
 	for (auto& background : m_scene_layers[static_cast<int>(SceneLayers::kBackground)]->GetChildren())
 	{
