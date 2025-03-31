@@ -258,7 +258,7 @@ void World::BuildScene()
 	
 }
 
-void World::AdaptPlayerPosition() //changed by Josh added in secondary player functionality
+void World::AdaptPlayerPosition() 
 {
 	//Keep the players on the screen 
 	sf::FloatRect view_bounds = GetViewBounds();
