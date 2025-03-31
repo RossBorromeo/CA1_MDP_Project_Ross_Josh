@@ -14,7 +14,7 @@ World::World(sf::RenderTarget& output_target, FontHolder& font, SoundPlayer& sou
 	, m_sounds(sounds)
 	, m_scenegraph(ReceiverCategories::kNone)
 	, m_scene_layers()
-	, m_world_bounds(0.f, 0.f, m_camera.getSize().x, 3000.f)
+	, m_world_bounds(0.f, 0.f, m_camera.getSize().x, 15.f * 60.f * std::abs(m_scrollspeed))
 	, m_spawn_position(m_camera.getSize().x / 2.f, m_world_bounds.height - m_camera.getSize().y / 2.f)
 	, m_scrollspeed(-50.f)
 	, m_player_aircraft()
@@ -35,8 +35,8 @@ World::World(sf::RenderTarget& output_target, FontHolder& font, SoundPlayer& sou
 	LoadTextures();
 	BuildScene();
 	std::cout << "UpperAir layer is: " << m_scene_layers[static_cast<int>(SceneLayers::kUpperAir)] << "\n";
-
 	m_camera.setCenter(m_spawn_position);
+	SetWorldHeight(m_scrollspeed);
 }
 
 void World::SetWorldScrollCompensation(float compensation)
@@ -159,10 +159,11 @@ void World::SetCurrentBattleFieldPosition(float lineY)
 	m_spawn_position.y = m_world_bounds.height;
 }
 
-void World::SetWorldHeight(float height)
+void World::SetWorldHeight(float scrollspeed)
 {
-	m_world_bounds.height = height;
+	m_world_bounds.height = 15.f * 60.f * std::abs(scrollspeed);
 }
+
 
 //void World::CreatePickup(sf::Vector2f position, PickupType type)
 //{
