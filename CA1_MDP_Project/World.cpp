@@ -84,6 +84,9 @@ void World::Update(sf::Time dt)
 	AdaptPlayerPosition();
 	UpdateBackground(dt.asSeconds());
 	UpdateSounds();
+
+
+	
 }
 
 void World::Draw()
@@ -91,7 +94,7 @@ void World::Draw()
 	// Log the camera view info
 	sf::Vector2f center = m_camera.getCenter();
 	sf::Vector2f size = m_camera.getSize();
-	std::cout << "[World] Camera Center: (" << center.x << ", " << center.y << "), Size: (" << size.x << ", " << size.y << ")\n";
+
 
 	if (PostEffect::IsSupported())
 	{
@@ -265,6 +268,9 @@ void World::BuildScene()
 	}
 
 	AddEnemies();
+
+
+	
 }
 
 
