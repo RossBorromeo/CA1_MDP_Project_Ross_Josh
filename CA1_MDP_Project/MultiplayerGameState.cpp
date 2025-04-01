@@ -156,15 +156,15 @@ bool MultiplayerGameState::Update(sf::Time dt)
 		}
 
 
-		//  Allow broadcasts regardless of game_started
+		
 		UpdateBroadcastMessage(dt);
 
-		//  Allow player invite blinking text regardless
+		
 		m_player_invitation_time += dt;
 		if (m_player_invitation_time > sf::seconds(1.f))
 			m_player_invitation_time = sf::Time::Zero;
 
-		//  Only run full game logic AFTER game started
+	
 		if (m_game_started)
 		{
 			// Remove dead aircraft
@@ -482,7 +482,7 @@ void MultiplayerGameState::HandlePacket(sf::Int32 type, sf::Packet& packet)
 	}
 	break;
 
-	// PATCH: MultiplayerGameState.cpp - only accept mission success if you are last survivor
+	
 
 	case Server::PacketType::kMissionSuccess:
 	{
