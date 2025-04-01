@@ -53,7 +53,6 @@ private:
 	void HandleIncomingConnections();
 	void HandleIncomingPackets();
 	void HandleIncomingPackets(sf::Packet& packet, RemotePeer& receiving_peer, bool& detected_timeout);
-	void HandleIncomingPackets(sf::TcpSocket& socket);
 	void HandleDisconnections();
 
 	void InformWorldState(sf::TcpSocket& socket);

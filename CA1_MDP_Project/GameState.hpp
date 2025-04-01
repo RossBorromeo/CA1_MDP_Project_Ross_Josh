@@ -16,5 +16,6 @@ public:
 private:
 	World m_world;
 	Player m_player;
+	int m_player_id;
 };
 

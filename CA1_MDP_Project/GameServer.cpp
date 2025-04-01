@@ -134,36 +134,47 @@ void GameServer::ExecutionThread()
 }
 
 
+
+
 void GameServer::Tick()
 {
     UpdateClientState();
 
-    //Check if the game is over = all planes postion.y < offset
-
-    bool all_aircraft_done = true;
+    // Track alive players
+    std::vector<sf::Int32> alive_players;
     for (const auto& current : m_aircraft_info)
     {
-        //As long as one player has not crossed the finish line the game is still live
-        if (current.second.m_position.y > 0.f)
-        {
-            all_aircraft_done = false;
-            break;
-        }
+        if (current.second.m_hitpoints > 0)
+            alive_players.push_back(current.first);
     }
 
-    if (all_aircraft_done)
+    // If one player left alive, notify them of win
+    if (alive_players.size() == 1)
     {
         sf::Packet mission_success_packet;
         mission_success_packet << static_cast<sf::Int32>(Server::PacketType::kMissionSuccess);
-        SendToAll(mission_success_packet);
+
+        for (PeerPtr& peer : m_peers)
+        {
+            if (peer->m_ready && !peer->m_timed_out)
+            {
+                for (sf::Int32 id : peer->m_aircraft_identifiers)
+                {
+                    if (id == alive_players.front())
+                        peer->m_socket.send(mission_success_packet);
+                }
+            }
+        }
     }
 
-    //Remove aircraft that have been destroyed
+    // Detect and broadcast destroyed aircraft
+    std::vector<sf::Int32> destroyed;
     for (auto itr = m_aircraft_info.begin(); itr != m_aircraft_info.end();)
     {
         if (itr->second.m_hitpoints <= 0)
         {
-            m_aircraft_info.erase(itr++);
+            destroyed.push_back(itr->first);
+            itr = m_aircraft_info.erase(itr);
         }
         else
         {
@@ -171,36 +182,38 @@ void GameServer::Tick()
         }
     }
 
-    //Check if it is time to spawn enemies
+    // Send destroy packet to all clients
+    for (sf::Int32 dead_id : destroyed)
+    {
+        sf::Packet destroy_packet;
+        destroy_packet << static_cast<sf::Int32>(Server::PacketType::kDestroyAircraft);
+        destroy_packet << dead_id;
+        SendToAll(destroy_packet);
+    }
+
+    // Enemy spawn logic (unchanged)
     if (Now() >= m_time_for_next_spawn + m_last_spawn_time)
     {
-        //Not going to spawn enemies near the end
         if (m_battlefield_rect.top > 600.f)
         {
             std::size_t enemy_count = 1 + Utility::RandomInt(2);
             float spawn_centre = static_cast<float>(Utility::RandomInt(500) - 250);
-
-            //If there is only one enemy it is at spawn_centre
             float plane_distance = 0.f;
             float next_spawn_position = spawn_centre;
 
-            //If there are two enemies they should be centred on the spawn centre
             if (enemy_count == 2)
             {
                 plane_distance = static_cast<float>(150 + Utility::RandomInt(250));
                 next_spawn_position = spawn_centre - plane_distance / 2.f;
             }
 
-            //Send the spawn packets to the clients
             for (std::size_t i = 0; i < enemy_count; ++i)
             {
                 sf::Packet packet;
                 packet << static_cast<sf::Int32>(Server::PacketType::kSpawnEnemy);
                 packet << static_cast<sf::Int32>(1 + Utility::RandomInt(static_cast<int>(AircraftType::kAircraftCount) - 1));
-
                 packet << m_world_height - m_battlefield_rect.top + 500;
                 packet << next_spawn_position;
-
                 next_spawn_position += plane_distance / 2.f;
                 SendToAll(packet);
             }
@@ -209,6 +222,8 @@ void GameServer::Tick()
         }
     }
 }
+
+
 
 sf::Time GameServer::Now() const
 {

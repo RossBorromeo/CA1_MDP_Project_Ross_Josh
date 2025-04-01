@@ -48,6 +48,8 @@ public:
 	sf::Vector2f GetRespawnPosition() const;
 
 
+
+
 private:
 	virtual void DrawCurrent(sf::RenderTarget& target, sf::RenderStates states) const;
 	virtual void UpdateCurrent(sf::Time dt, CommandQueue& commands) override;

@@ -10,6 +10,8 @@ public:
 	virtual void Draw() override;
 	virtual bool Update(sf::Time dt) override;
 	virtual bool HandleEvent(const sf::Event& event);
+	static std::string s_last_message;
+
 
 private:
 	sf::Text m_game_over_text;

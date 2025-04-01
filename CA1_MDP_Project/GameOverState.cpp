@@ -7,6 +7,8 @@
 #include "Player.hpp"
 #include "Utility.hpp"
 
+std::string GameOverState::s_last_message = "Ship Destroyed";
+
 
 GameOverState::GameOverState(StateStack& stack, Context context, const std::string& text)
     : State(stack, context)
@@ -15,6 +17,7 @@ GameOverState::GameOverState(StateStack& stack, Context context, const std::stri
 {
     sf::Font& font = context.fonts->Get(Font::kMain);
     sf::Vector2f window_size(context.window->getSize());
+    m_game_over_text.setString(s_last_message); // use the static message
 
     m_game_over_text.setFont(font);
     m_game_over_text.setString(text);
@@ -41,17 +44,16 @@ void GameOverState::Draw()
 
 bool GameOverState::Update(sf::Time dt)
 {
-    //Show gameover for 3 seconds and then return to the main menu
     m_elapsed_time += dt;
-    if (m_elapsed_time > sf::seconds(3))
-    {
-        RequestStackClear();
-        RequestStackPush(StateID::kMenu);
-    }
-    return false;
+    return false; // Let underlying game state continue updating
 }
 
 bool GameOverState::HandleEvent(const sf::Event& event)
 {
+    if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
+    {
+        RequestStackClear();
+        RequestStackPush(StateID::kMenu);
+    }
     return false;
 }

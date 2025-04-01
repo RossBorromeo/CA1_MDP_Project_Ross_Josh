@@ -26,6 +26,7 @@ namespace Server
 		kMissionSuccess,         // No args � indicates game win
 		kWaitingNotice,          // Server waiting for all players to be ready
 		kGameReady,              // All players ready  start game
+		kDestroyAircraft         // Aircraft ID
 	};
 }
 
