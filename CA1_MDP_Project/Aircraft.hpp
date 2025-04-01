@@ -1,6 +1,5 @@
-//D00238448:Joshua Thompson
-//D00241095:Ross Borromeo
 
+//Ross - D00241095 | Josh - D00238448
 #pragma once
 #include "Entity.hpp"
 #include "AircraftType.hpp"
