@@ -34,7 +34,7 @@ std::vector<AircraftData> InitializeAircraftData()
     data[static_cast<int>(AircraftType::kMeteor)].m_directions.emplace_back(Direction(+45.f, 80.f));
 
     //AI for Meteor
-    data[static_cast<int>(AircraftType::kAvenger)].m_hitpoints = 125;
+    data[static_cast<int>(AircraftType::kAvenger)].m_hitpoints = 120;
     data[static_cast<int>(AircraftType::kAvenger)].m_speed = 75.f;
     data[static_cast<int>(AircraftType::kMeteor)].m_fire_interval = sf::Time::Zero;
     data[static_cast<int>(AircraftType::kAvenger)].m_texture = TextureID::kAvenger;
@@ -54,7 +54,7 @@ std::vector<AircraftData> InitializeAircraftData()
 std::vector<ProjectileData> InitializeProjectileData()
 {
     std::vector<ProjectileData> data(static_cast<int>(ProjectileType::kProjectileCount));
-    data[static_cast<int>(ProjectileType::kAlliedBullet)].m_damage = 25;
+    data[static_cast<int>(ProjectileType::kAlliedBullet)].m_damage = 10;
     data[static_cast<int>(ProjectileType::kAlliedBullet)].m_speed = 300;
     data[static_cast<int>(ProjectileType::kAlliedBullet)].m_texture = TextureID::kEntities;
     data[static_cast<int>(ProjectileType::kAlliedBullet)].m_texture_rect = sf::IntRect(175, 64, 3, 14);
