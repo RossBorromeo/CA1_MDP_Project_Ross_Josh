@@ -64,12 +64,12 @@ void World::Update(sf::Time dt)
 		m_camera.setCenter(m_camera.getCenter().x, m_world_bounds.height);
 	}
 	
-	// 2. THEN zero velocity AFTER command application
+
 	for (Aircraft* aircraft : m_player_aircraft)
 		aircraft->SetVelocity(0.f, 0.f);
 
 
-	// 1. Process commands FIRST
+
 	while (!m_command_queue.IsEmpty())
 		m_scenegraph.OnCommand(m_command_queue.Pop(), dt);
 
@@ -512,7 +512,7 @@ void World::HandleCollisions()
 			auto& enemy = static_cast<Aircraft&>(*pair.second);
 
 
-			//Josh added Invincibility
+			
 			if (!player.IsInvincible())
 			{
 				// Deal damage
