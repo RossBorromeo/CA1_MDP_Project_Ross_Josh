@@ -91,6 +91,7 @@ private:
 	sf::Time m_spawn_timer;
 	sf::Time m_spawn_interval;
 
+
 	std::vector<Aircraft*> m_player_aircraft;
 
 	CommandQueue m_command_queue;

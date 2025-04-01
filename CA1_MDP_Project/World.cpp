@@ -147,6 +147,8 @@ Aircraft* World::AddAircraft(int identifier)
 }
 
 
+
+
 bool World::PollGameAction(GameActions::Action& out)
 {
 	return m_network_node->PollGameAction(out);
@@ -509,15 +511,26 @@ void World::HandleCollisions()
 			auto& player = static_cast<Aircraft&>(*pair.first);
 			auto& enemy = static_cast<Aircraft&>(*pair.second);
 
+
+			//Josh added Invincibility
 			if (!player.IsInvincible())
 			{
+				// Deal damage
 				if (enemy.GetType() == AircraftType::kAvenger)
-					player.Damage(30);  // More damage for Avenger
+					player.Damage(30);
 				else
-					player.Damage(10);  // Normal damage
+					player.Damage(10);
 
-				player.StartInvincibility();
-				player.setPosition(player.GetRespawnPosition());
+				//  Destroy the player if HP now 0 or less
+				if (player.GetHitPoints() <= 0)
+				{
+					player.Destroy(); //  essential
+				}
+				else
+				{
+					player.StartInvincibility();
+					player.setPosition(player.GetRespawnPosition());
+				}
 			}
 
 			enemy.Destroy();

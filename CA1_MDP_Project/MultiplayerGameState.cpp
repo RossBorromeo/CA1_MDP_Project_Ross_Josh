@@ -4,6 +4,8 @@
 #include "MultiplayerGameState.hpp"
 #include "MusicPlayer.hpp"
 #include "Utility.hpp"
+#include "GameOverState.hpp"
+
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Network/Packet.hpp>
@@ -130,6 +132,29 @@ bool MultiplayerGameState::Update(sf::Time dt)
 		}
 
 		m_time_since_last_packet += dt;
+
+
+		if (m_game_started && !m_game_over_shown) //  ONLY check after game starts
+		{
+			bool all_local_dead = true;
+			for (sf::Int32 id : m_local_player_identifiers)
+			{
+				Aircraft* ac = m_world.GetAircraft(id);
+				if (ac && !ac->IsMarkedForRemoval() && ac->GetHitPoints() > 0)
+				{
+					all_local_dead = false;
+					break;
+				}
+			}
+
+			if (all_local_dead)
+			{
+				m_game_over_shown = true;
+				RequestStackPush(StateID::kGameOver);
+				DisableAllRealtimeActions();
+			}
+		}
+
 
 		//  Allow broadcasts regardless of game_started
 		UpdateBroadcastMessage(dt);
@@ -433,6 +458,16 @@ void MultiplayerGameState::HandlePacket(sf::Int32 type, sf::Packet& packet)
 	}
 	break;
 
+	case Server::PacketType::kDestroyAircraft:
+	{
+		sf::Int32 id;
+		packet >> id;
+		m_world.RemoveAircraft(id); //  marks for removal
+		m_players.erase(id);        //  optional: clean up input handler
+	}
+	break;
+
+
 
 
 	case Server::PacketType::kSpawnEnemy:
@@ -447,11 +482,37 @@ void MultiplayerGameState::HandlePacket(sf::Int32 type, sf::Packet& packet)
 	}
 	break;
 
+	// PATCH: MultiplayerGameState.cpp - only accept mission success if you are last survivor
+
 	case Server::PacketType::kMissionSuccess:
 	{
-		RequestStackPush(StateID::kMissionSuccess);
+		bool is_winner = false;
+		for (sf::Int32 id : m_local_player_identifiers)
+		{
+			Aircraft* ac = m_world.GetAircraft(id);
+			if (ac && !ac->IsMarkedForRemoval() && ac->GetHitPoints() > 0)
+			{
+				is_winner = true;
+				break;
+			}
+		}
+
+		if (is_winner)
+		{
+			GameOverState::s_last_message = "Asteroids Avoided";
+			RequestStackPush(StateID::kGameOver);
+
+
+		}
+		else
+		{
+			GameOverState::s_last_message = "Ship Destroyed";
+			RequestStackPush(StateID::kGameOver);
+
+		}
 	}
 	break;
+
 
 
 	case Server::PacketType::kUpdateClientState:

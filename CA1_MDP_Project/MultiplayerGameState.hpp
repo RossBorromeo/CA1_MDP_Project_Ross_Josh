@@ -65,4 +65,7 @@ private:
 	//  NEW: Multiplayer readiness tracking
 	bool m_local_ready = false;
 	std::size_t m_ready_players = 0;
+
+	bool m_game_over_shown = false; // New flag to avoid repeat push
+
 };
