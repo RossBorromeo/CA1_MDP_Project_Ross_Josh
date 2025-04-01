@@ -1,3 +1,6 @@
+//D00238448:Joshua Thompson
+//D00241095:Ross Borromeo
+
 #include "GameOverState.hpp"
 #include "ResourceHolder.hpp"
 #include <SFML/Graphics/RenderWindow.hpp>

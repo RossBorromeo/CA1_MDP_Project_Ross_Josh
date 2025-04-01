@@ -1,3 +1,6 @@
+//D00238448:Joshua Thompson
+//D00241095:Ross Borromeo
+
 #include "Animation.hpp"
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>

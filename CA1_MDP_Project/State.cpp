@@ -1,3 +1,6 @@
+//D00238448:Joshua Thompson
+//D00241095:Ross Borromeo
+
 #include "State.hpp"
 #include "StateID.hpp"
 #include "StateStack.hpp"

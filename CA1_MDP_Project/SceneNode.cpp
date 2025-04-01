@@ -1,3 +1,6 @@
+//D00238448:Joshua Thompson
+//D00241095:Ross Borromeo
+
 #include "SceneNode.hpp"
 #include "Utility.hpp"
 #include <cassert>
