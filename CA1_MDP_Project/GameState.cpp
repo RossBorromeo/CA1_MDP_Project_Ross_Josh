@@ -1,3 +1,6 @@
+//D00238448:Joshua Thompson
+//D00241095:Ross Borromeo
+
 #include "GameState.hpp"
 #include "Player.hpp"
 #include "MissionStatus.hpp"

@@ -16,7 +16,7 @@ public:
 	Player(sf::TcpSocket* socket, sf::Int32 identifier, const KeyBinding* binding);
 	void HandleEvent(const sf::Event& event, CommandQueue& command);
 	void HandleRealtimeInput(CommandQueue& command);
-	void HandleRealtimeNetworkInput(CommandQueue& commands);
+	void HandleRealtimeNetworkInput(CommandQueue& commands); //added in
 
 	//React to events or realtime state changes recevied over the network
 	void HandleNetworkEvent(Action action, CommandQueue& commands);

@@ -1,3 +1,6 @@
+//D00238448:Joshua Thompson
+//D00241095:Ross Borromeo
+
 #include "NetworkNode.hpp"
 NetworkNode::NetworkNode()
 	: SceneNode()

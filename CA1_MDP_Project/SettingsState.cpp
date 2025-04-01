@@ -1,3 +1,6 @@
+//D00238448:Joshua Thompson
+//D00241095:Ross Borromeo
+
 #include "SettingsState.hpp"
 #include "ResourceHolder.hpp"
 #include "Utility.hpp"
